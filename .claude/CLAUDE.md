@@ -39,5 +39,7 @@ vercel --prod  # 本番デプロイ
 - **API仕様・データフロー** → `rules/api/api-rules.md`
 - **Redisデータモデル** → `rules/database.md`
 - **コードスタイル** → `rules/code-style.md`
+- **JavaScriptガイドライン** → `rules/javascript.md`
 - **CSSガイドライン** → `rules/css.md`
 - **HTMLガイドライン** → `rules/html.md`
+- **セキュリティルール** → `rules/security.md`
