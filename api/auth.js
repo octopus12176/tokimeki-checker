@@ -96,6 +96,13 @@ export default async function handler(req, res) {
     });
     const profile = await userRes.json();
 
+    // Whitelist check
+    const ALLOWED = (process.env.ALLOWED_EMAILS || '')
+      .split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+    if (ALLOWED.length > 0 && !ALLOWED.includes(profile.email.toLowerCase())) {
+      return res.redirect(302, '/?error=unauthorized');
+    }
+
     const user = {
       id:      profile.sub,
       name:    profile.name,

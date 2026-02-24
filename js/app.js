@@ -199,7 +199,7 @@ const App = (() => {
   }
 
   // ── Result ───────────────────────────────────────────────────────────────
-  function buildResult() {
+  async function buildResult() {
     const MAX = 18,
       MIN = -17;
     const total = state.scores.reduce((a, b) => a + b, 0);
@@ -224,7 +224,18 @@ const App = (() => {
       desc = `「${state.itemName}」への欲求は一時的かもしれません。節約した分を本当に大切なものへ。`;
     }
 
-    state.lastResult = { type, emoji, verdict, desc, scorePct };
+    const recordId = crypto.randomUUID();
+    state.lastResult = { id: recordId, type, emoji, verdict, desc, scorePct };
+
+    // Auto-save result with saved: null (undecided)
+    saveResult({
+      id:        recordId,
+      itemName:  state.itemName,
+      itemPrice: parseFloat(state.itemPrice) || 0,
+      type, verdict, score: scorePct,
+      saved: null,
+      date:  new Date().toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' }),
+    });
 
     // Render result UI
     const circle = document.getElementById('result-circle');
@@ -250,25 +261,31 @@ const App = (() => {
     UI.showScreen('screen-result');
   }
 
-  // Called when user taps 買った / 買わなかった
+  // ── Decision helpers ─────────────────────────────────────────────────────
+  async function patchDecision(id, saved) {
+    try {
+      await fetch('/api/history', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, saved }),
+      });
+    } catch (e) {
+      console.error('patchDecision:', e);
+    }
+  }
+
+  // Called from history modal to register a decision later
+  async function updateHistoryDecision(id, bought) {
+    await patchDecision(id, !bought);
+    await loadHistory();
+    UI.renderHistory(state.history);
+    showToast(bought ? '購入を記録しました！' : '節約を記録しました 💰');
+  }
+
+  // Called when user taps 買った / 買わなかった on result screen
   async function recordDecision(bought) {
     const priceNum = parseFloat(state.itemPrice) || 0;
-    const { type, verdict, scorePct } = state.lastResult;
-
-    const payload = {
-      itemName: state.itemName,
-      itemPrice: priceNum,
-      type,
-      verdict,
-      score: scorePct,
-      saved: !bought,
-      date: new Date().toLocaleDateString('ja-JP', {
-        month: 'short',
-        day: 'numeric',
-      }),
-    };
-
-    await saveResult(payload);
+    await patchDecision(state.lastResult.id, !bought);
     await loadHistory();
 
     // Show toast
@@ -343,6 +360,11 @@ const App = (() => {
     const user = await checkAuth();
     if (!user) {
       UI.showScreen('screen-login');
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('error') === 'unauthorized') {
+        const el = document.getElementById('login-error');
+        if (el) { el.style.display = 'block'; el.textContent = '⚠️ このGoogleアカウントはアクセス許可されていません。'; }
+      }
       return;
     }
 
@@ -370,6 +392,7 @@ const App = (() => {
     closeHistory,
     handleOverlayClick,
     resetApp,
+    updateHistoryDecision,
   };
 })();
 

@@ -1305,3 +1305,16 @@ input::placeholder {
   font-size: 15px;
   color: #00a86b;
 }
+
+/* ── 履歴モーダル内の小型決定ボタン ── */
+.decision-btn-small {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.decision-btn-small.bought  { background: var(--pink); color: #fff; }
+.decision-btn-small.skipped { background: var(--mint); color: #fff; }

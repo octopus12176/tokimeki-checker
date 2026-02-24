@@ -26,7 +26,7 @@ async function getUser(req) {
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -50,16 +50,16 @@ export default async function handler(req, res) {
 
   // ── POST: save a new check result ──
   if (req.method === 'POST') {
-    const { itemName, itemPrice, type, verdict, score, saved, date } = req.body;
+    const { id, itemName, itemPrice, type, verdict, score, saved, date } = req.body;
 
     const record = {
-      id:        crypto.randomUUID(),
+      id:        id || crypto.randomUUID(),
       itemName:  itemName  || '不明',
       itemPrice: itemPrice || 0,
       type:      type      || 'wait',
       verdict:   verdict   || '',
       score:     score     || 0,
-      saved:     !!saved,
+      saved:     saved !== undefined ? saved : null,
       date:      date      || new Date().toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' }),
       createdAt: Date.now(),
     };
@@ -68,12 +68,45 @@ export default async function handler(req, res) {
     await redis.lpush(historyKey, JSON.stringify(record));
     await redis.ltrim(historyKey, 0, 99);
 
-    // Accumulate savings
-    if (saved && itemPrice > 0) {
+    // Accumulate savings only when explicitly saved (not null)
+    if (saved === true && itemPrice > 0) {
       await redis.incrbyfloat(savingsKey, Number(itemPrice));
     }
 
     return res.status(201).json({ ok: true, record });
+  }
+
+  // ── PATCH: update saved status for an undecided record ──
+  if (req.method === 'PATCH') {
+    const { id, saved } = req.body;
+    if (!id || saved === undefined || saved === null) {
+      return res.status(400).json({ error: 'id and saved (true/false) required' });
+    }
+
+    const rawList = await redis.lrange(historyKey, 0, -1);
+    let foundIndex = -1;
+    let record = null;
+    for (let i = 0; i < rawList.length; i++) {
+      const r = typeof rawList[i] === 'string' ? JSON.parse(rawList[i]) : rawList[i];
+      if (r.id === id) {
+        if (r.saved !== null && r.saved !== undefined) {
+          return res.status(400).json({ error: 'already decided' });
+        }
+        foundIndex = i;
+        record = r;
+        break;
+      }
+    }
+    if (!record) return res.status(404).json({ error: 'record not found' });
+
+    record.saved = saved;
+    await redis.lset(historyKey, foundIndex, JSON.stringify(record));
+
+    if (saved && record.itemPrice > 0) {
+      await redis.incrbyfloat(savingsKey, Number(record.itemPrice));
+    }
+
+    return res.status(200).json({ ok: true, record });
   }
 
   return res.status(405).json({ error: 'method not allowed' });

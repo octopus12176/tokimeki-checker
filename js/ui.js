@@ -136,12 +136,13 @@ const UI = {
             · ${h.score}点
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end">
           ${
-            h.saved
-              ? `<span class="saved-badge">¥${Number(
-                  h.itemPrice
-                ).toLocaleString()} 節約</span>`
+            h.saved === true
+              ? `<span class="saved-badge">¥${Number(h.itemPrice).toLocaleString()} 節約</span>`
+              : h.saved === null && h.itemPrice > 0
+              ? `<button class="decision-btn-small bought" onclick="App.updateHistoryDecision('${h.id}',true)">🛒 買った</button>
+                 <button class="decision-btn-small skipped" onclick="App.updateHistoryDecision('${h.id}',false)">🌿 見送った</button>`
               : ''
           }
           <span class="hist-badge ${h.type}">${h.verdict}</span>
