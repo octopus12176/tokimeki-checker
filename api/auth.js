@@ -1,6 +1,6 @@
 // api/auth.js
-// Google OAuth 2.0 flow + session via signed cookie (Vercel KV)
-import { kv } from '@vercel/kv';
+// Google OAuth 2.0 flow + session via signed cookie (Upstash Redis)
+import { redis } from './lib/redis.js';
 import { serialize, parse } from 'cookie';
 import crypto from 'crypto';
 
@@ -51,7 +51,7 @@ export default async function handler(req, res) {
     const sessionId = unsign(signed);
     if (!sessionId) return res.status(401).json({ error: 'invalid session' });
 
-    const user = await kv.get(`session:${sessionId}`);
+    const user = await redis.get(`session:${sessionId}`);
     if (!user)  return res.status(401).json({ error: 'session expired' });
 
     return res.status(200).json(user);
@@ -105,7 +105,7 @@ export default async function handler(req, res) {
 
     // Store session in KV
     const sessionId = crypto.randomUUID();
-    await kv.set(`session:${sessionId}`, user, { ex: SESSION_TTL });
+    await redis.set(`session:${sessionId}`, user, { ex: SESSION_TTL });
 
     res.setHeader('Set-Cookie', sessionCookie(sessionId));
     return res.redirect(302, '/');
@@ -116,7 +116,7 @@ export default async function handler(req, res) {
     const cookies   = parse(req.headers.cookie || '');
     const signed    = cookies[COOKIE_NAME];
     const sessionId = signed ? unsign(signed) : null;
-    if (sessionId) await kv.del(`session:${sessionId}`);
+    if (sessionId) await redis.del(`session:${sessionId}`);
 
     res.setHeader('Set-Cookie', sessionCookie('', -1));
     return res.redirect(302, '/');

@@ -1,5 +1,5 @@
 // api/history.js
-import { kv } from '@vercel/kv';
+import { redis } from './lib/redis.js';
 import { parse } from 'cookie';
 import crypto from 'crypto';
 
@@ -21,7 +21,7 @@ async function getUser(req) {
   if (!signed) return null;
   const sessionId = unsign(signed);
   if (!sessionId) return null;
-  return kv.get(`session:${sessionId}`);
+  return redis.get(`session:${sessionId}`);
 }
 
 export default async function handler(req, res) {
@@ -39,8 +39,8 @@ export default async function handler(req, res) {
   // ── GET: return history list + total savings ──
   if (req.method === 'GET') {
     const [history, totalSaved] = await Promise.all([
-      kv.lrange(historyKey, 0, 99),   // latest 100 records
-      kv.get(savingsKey),
+      redis.lrange(historyKey, 0, 99),   // latest 100 records
+      redis.get(savingsKey),
     ]);
     return res.status(200).json({
       history:    (history || []).map(h => typeof h === 'string' ? JSON.parse(h) : h),
@@ -65,12 +65,12 @@ export default async function handler(req, res) {
     };
 
     // Prepend to list (newest first), cap at 100
-    await kv.lpush(historyKey, JSON.stringify(record));
-    await kv.ltrim(historyKey, 0, 99);
+    await redis.lpush(historyKey, JSON.stringify(record));
+    await redis.ltrim(historyKey, 0, 99);
 
     // Accumulate savings
     if (saved && itemPrice > 0) {
-      await kv.incrbyfloat(savingsKey, Number(itemPrice));
+      await redis.incrbyfloat(savingsKey, Number(itemPrice));
     }
 
     return res.status(201).json({ ok: true, record });

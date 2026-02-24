@@ -1,6 +1,6 @@
 // api/savings.js
 // 節約額の集計・月別内訳・リセット専用エンドポイント
-import { kv } from '@vercel/kv';
+import { redis } from './lib/redis.js';
 import { parse } from 'cookie';
 import crypto from 'crypto';
 
@@ -25,7 +25,7 @@ async function getUser(req) {
   if (!signed) return null;
   const sessionId = unsign(signed);
   if (!sessionId) return null;
-  return kv.get(`session:${sessionId}`);
+  return redis.get(`session:${sessionId}`);
 }
 
 export default async function handler(req, res) {
@@ -44,8 +44,8 @@ export default async function handler(req, res) {
   // 累計節約額 + 月別内訳を返す
   if (req.method === 'GET') {
     const [rawHistory, totalSaved] = await Promise.all([
-      kv.lrange(historyKey, 0, 99),
-      kv.get(savingsKey),
+      redis.lrange(historyKey, 0, 99),
+      redis.get(savingsKey),
     ]);
 
     const history = (rawHistory || []).map(h =>
@@ -85,7 +85,7 @@ export default async function handler(req, res) {
   // ── DELETE /api/savings
   // 節約額のみリセット（履歴は残す）
   if (req.method === 'DELETE') {
-    await kv.set(savingsKey, 0);
+    await redis.set(savingsKey, 0);
     return res.status(200).json({ ok: true, message: '節約額をリセットしました' });
   }
 

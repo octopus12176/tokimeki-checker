@@ -1,5 +1,5 @@
 // api/feedback.js
-import { kv } from '@vercel/kv';
+import { redis } from './lib/redis.js';
 import { parse } from 'cookie';
 import crypto from 'crypto';
 
@@ -27,7 +27,7 @@ async function getUser(req) {
   if (!signed) return null;
   const sessionId = unsign(signed);
   if (!sessionId) return null;
-  return kv.get(`session:${sessionId}`);
+  return redis.get(`session:${sessionId}`);
 }
 
 const THEME_INSTRUCTIONS = {
