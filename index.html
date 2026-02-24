@@ -8,1053 +8,91 @@
       href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap"
       rel="stylesheet"
     />
-    <style>
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-
-      :root {
-        --pink: #ff6b9d;
-        --yellow: #ffe14d;
-        --mint: #4ecdc4;
-        --coral: #ff8b6b;
-        --purple: #c77dff;
-        --blue: #74b9ff;
-        --green: #55efc4;
-        --red: #ff6b6b;
-        --bg: #fff5f9;
-        --white: #ffffff;
-        --dark: #2d2d2d;
-        --shadow: 4px 4px 0px #2d2d2d;
-        --shadow-lg: 6px 6px 0px #2d2d2d;
-        --shadow-sm: 2px 2px 0px #2d2d2d;
-      }
-
-      html,
-      body {
-        min-height: 100%;
-        background: var(--bg);
-        font-family: 'Zen Maru Gothic', sans-serif;
-        color: var(--dark);
-      }
-
-      body::before {
-        content: '';
-        position: fixed;
-        inset: 0;
-        pointer-events: none;
-        z-index: 0;
-        background-image: radial-gradient(
-            circle at 10% 20%,
-            rgba(255, 107, 157, 0.08) 0%,
-            transparent 40%
-          ),
-          radial-gradient(
-            circle at 90% 80%,
-            rgba(78, 205, 196, 0.08) 0%,
-            transparent 40%
-          );
-      }
-
-      .floaties {
-        position: fixed;
-        inset: 0;
-        pointer-events: none;
-        z-index: 0;
-        overflow: hidden;
-      }
-      .floaty {
-        position: absolute;
-        animation: floatAround linear infinite;
-        opacity: 0.2;
-        user-select: none;
-      }
-      @keyframes floatAround {
-        0% {
-          transform: translateY(0) rotate(0deg);
-        }
-        50% {
-          transform: translateY(-28px) rotate(180deg);
-        }
-        100% {
-          transform: translateY(0) rotate(360deg);
-        }
-      }
-
-      /* ── HEADER ── */
-      .header {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 50;
-        padding: 14px 24px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: var(--white);
-        border-bottom: 3px solid var(--dark);
-      }
-      .logo {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-family: 'Nunito', sans-serif;
-        font-weight: 900;
-        font-size: 20px;
-      }
-      .logo-badge {
-        background: var(--pink);
-        color: white;
-        padding: 4px 12px;
-        border-radius: 100px;
-        border: 2px solid var(--dark);
-        box-shadow: var(--shadow-sm);
-        font-size: 16px;
-      }
-      .history-pill {
-        background: var(--yellow);
-        border: 2px solid var(--dark);
-        box-shadow: var(--shadow-sm);
-        border-radius: 100px;
-        padding: 8px 16px;
-        font-family: 'Nunito', sans-serif;
-        font-weight: 800;
-        font-size: 13px;
-        cursor: pointer;
-        transition: all 0.15s;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .history-pill:hover {
-        transform: translate(-2px, -2px);
-        box-shadow: var(--shadow);
-      }
-      .history-pill:active {
-        transform: translate(2px, 2px);
-        box-shadow: none;
-      }
-
-      /* ── APP ── */
-      #app {
-        position: relative;
-        z-index: 1;
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 100px 20px 40px;
-      }
-
-      .screen {
-        display: none;
-        width: 100%;
-        max-width: 560px;
-      }
-      .screen.active {
-        display: block;
-        animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-      }
-      @keyframes popIn {
-        from {
-          opacity: 0;
-          transform: scale(0.85) translateY(20px);
-        }
-        to {
-          opacity: 1;
-          transform: scale(1) translateY(0);
-        }
-      }
-
-      .card {
-        background: var(--white);
-        border: 3px solid var(--dark);
-        border-radius: 24px;
-        box-shadow: var(--shadow-lg);
-        padding: 36px 32px;
-        position: relative;
-        overflow: hidden;
-      }
-      .card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 120px;
-        height: 120px;
-        background: var(--yellow);
-        border-radius: 0 24px 0 120px;
-        opacity: 0.25;
-        pointer-events: none;
-      }
-
-      /* ── INPUT ── */
-      .screen-title {
-        font-family: 'Nunito', sans-serif;
-        font-weight: 900;
-        font-size: clamp(26px, 5vw, 36px);
-        line-height: 1.25;
-        margin-bottom: 8px;
-      }
-      .hl {
-        background: var(--yellow);
-        padding: 0 6px;
-        border-radius: 6px;
-      }
-      .screen-subtitle {
-        font-size: 14px;
-        color: #888;
-        margin-bottom: 28px;
-        line-height: 1.7;
-      }
-
-      .field-label {
-        font-family: 'Nunito', sans-serif;
-        font-weight: 800;
-        font-size: 13px;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .field-label .dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--pink);
-        border: 2px solid var(--dark);
-      }
-
-      input[type='text'],
-      input[type='number'] {
-        width: 100%;
-        border: 2.5px solid var(--dark);
-        border-radius: 14px;
-        padding: 14px 18px;
-        font-family: 'Zen Maru Gothic', sans-serif;
-        font-size: 18px;
-        font-weight: 700;
-        color: var(--dark);
-        background: var(--bg);
-        outline: none;
-        transition: all 0.2s;
-        margin-bottom: 18px;
-      }
-      input:focus {
-        background: white;
-        box-shadow: 0 0 0 4px rgba(255, 107, 157, 0.2);
-        transform: translateY(-1px);
-      }
-      input::placeholder {
-        color: #ccc;
-        font-weight: 500;
-      }
-
-      .price-row {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        margin-bottom: 18px;
-      }
-      .yen-badge {
-        background: var(--mint);
-        border: 2.5px solid var(--dark);
-        border-radius: 12px;
-        padding: 14px 16px;
-        font-size: 18px;
-        font-weight: 900;
-        flex-shrink: 0;
-        line-height: 1;
-      }
-      .price-row input[type='number'] {
-        margin-bottom: 0;
-        flex: 1;
-      }
-
-      .btn-start {
-        width: 100%;
-        background: var(--pink);
-        color: white;
-        border: 2.5px solid var(--dark);
-        border-radius: 16px;
-        padding: 18px;
-        font-family: 'Nunito', sans-serif;
-        font-weight: 900;
-        font-size: 18px;
-        cursor: pointer;
-        box-shadow: var(--shadow);
-        transition: all 0.15s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        margin-top: 8px;
-      }
-      .btn-start:hover {
-        transform: translate(-2px, -2px);
-        box-shadow: var(--shadow-lg);
-      }
-      .btn-start:active {
-        transform: translate(3px, 3px);
-        box-shadow: none;
-      }
-
-      /* ── QUESTIONS ── */
-      .progress-wrap {
-        margin-bottom: 24px;
-      }
-      .progress-meta {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-      }
-      .progress-label {
-        font-family: 'Nunito', sans-serif;
-        font-weight: 800;
-        font-size: 13px;
-      }
-      .progress-steps {
-        display: flex;
-        gap: 6px;
-      }
-      .step-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        border: 2px solid var(--dark);
-        background: var(--bg);
-        transition: all 0.3s;
-      }
-      .step-dot.done {
-        background: var(--pink);
-      }
-      .step-dot.active {
-        background: var(--yellow);
-        transform: scale(1.3);
-      }
-      .progress-bar {
-        height: 10px;
-        background: var(--bg);
-        border: 2px solid var(--dark);
-        border-radius: 100px;
-        overflow: hidden;
-      }
-      .progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, var(--pink), var(--purple));
-        border-radius: 100px;
-        transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
-
-      .q-item-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: var(--yellow);
-        border: 2px solid var(--dark);
-        border-radius: 100px;
-        padding: 6px 14px;
-        font-weight: 700;
-        font-size: 14px;
-        margin-bottom: 20px;
-        box-shadow: var(--shadow-sm);
-      }
-
-      /* Special chip for activism question */
-      .q-item-chip.activism {
-        background: #1a1a2e;
-        color: white;
-        border-color: #1a1a2e;
-        animation: chipGlow 2s ease-in-out infinite;
-      }
-      @keyframes chipGlow {
-        0%,
-        100% {
-          box-shadow: var(--shadow-sm);
-        }
-        50% {
-          box-shadow: 2px 2px 0 #1a1a2e, 0 0 16px rgba(199, 125, 255, 0.4);
-        }
-      }
-
-      .q-theme-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-family: 'Nunito', sans-serif;
-        font-weight: 800;
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        padding: 4px 10px;
-        border-radius: 100px;
-        border: 2px solid var(--dark);
-        margin-bottom: 12px;
-      }
-
-      .q-text {
-        font-family: 'Nunito', sans-serif;
-        font-weight: 900;
-        font-size: clamp(19px, 3.5vw, 25px);
-        line-height: 1.45;
-        margin-bottom: 8px;
-      }
-      .q-sub {
-        font-size: 13px;
-        color: #999;
-        margin-bottom: 24px;
-        line-height: 1.7;
-      }
-
-      /* Activism question styles */
-      .activism-card {
-        background: #1a1a2e !important;
-        color: white !important;
-      }
-      .activism-card::before {
-        background: #c77dff !important;
-        opacity: 0.15 !important;
-      }
-      .activism-card .q-text {
-        color: white;
-      }
-      .activism-card .q-sub {
-        color: rgba(255, 255, 255, 0.6);
-      }
-      .activism-card .progress-label {
-        color: rgba(255, 255, 255, 0.8);
-      }
-      .activism-card .progress-bar {
-        background: rgba(255, 255, 255, 0.1);
-        border-color: rgba(255, 255, 255, 0.2);
-      }
-      .activism-card .step-dot {
-        border-color: rgba(255, 255, 255, 0.3);
-        background: rgba(255, 255, 255, 0.05);
-      }
-      .activism-card .step-dot.done {
-        background: var(--purple);
-        border-color: var(--purple);
-      }
-      .activism-card .step-dot.active {
-        background: var(--yellow);
-        border-color: var(--yellow);
-      }
-
-      .q-options {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-      }
-
-      .opt-btn {
-        background: var(--white);
-        border: 2.5px solid var(--dark);
-        border-radius: 18px;
-        padding: 18px 14px;
-        cursor: pointer;
-        transition: all 0.15s;
-        text-align: center;
-        box-shadow: var(--shadow-sm);
-        position: relative;
-        overflow: hidden;
-      }
-      .opt-btn::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: var(--opt-color, var(--pink));
-        opacity: 0;
-        transition: opacity 0.2s;
-      }
-      .opt-btn:hover {
-        transform: translate(-2px, -2px);
-        box-shadow: var(--shadow);
-      }
-      .opt-btn:hover::before {
-        opacity: 0.1;
-      }
-      .opt-btn.selected {
-        transform: translate(-2px, -2px);
-        box-shadow: var(--shadow);
-        border-color: var(--opt-color, var(--pink));
-      }
-      .opt-btn.selected::before {
-        opacity: 0.2;
-      }
-      .opt-btn:active {
-        transform: translate(2px, 2px);
-        box-shadow: none;
-      }
-      .opt-btn:disabled {
-        cursor: default;
-      }
-
-      /* Activism option buttons */
-      .activism-card .opt-btn {
-        background: rgba(255, 255, 255, 0.06);
-        border-color: rgba(255, 255, 255, 0.15);
-        color: white;
-      }
-      .activism-card .opt-btn .opt-sub {
-        color: rgba(255, 255, 255, 0.5);
-      }
-      .activism-card .opt-btn:hover {
-        background: rgba(255, 255, 255, 0.12);
-        border-color: rgba(255, 255, 255, 0.4);
-      }
-      .activism-card .opt-btn.selected {
-        border-color: var(--purple);
-        background: rgba(199, 125, 255, 0.2);
-      }
-
-      .opt-icon {
-        font-size: 30px;
-        margin-bottom: 8px;
-        display: block;
-        position: relative;
-        z-index: 1;
-      }
-      .opt-label {
-        font-family: 'Nunito', sans-serif;
-        font-weight: 800;
-        font-size: 13px;
-        display: block;
-        margin-bottom: 4px;
-        position: relative;
-        z-index: 1;
-        line-height: 1.3;
-      }
-      .opt-sub {
-        font-size: 11px;
-        color: #999;
-        display: block;
-        line-height: 1.4;
-        position: relative;
-        z-index: 1;
-      }
-
-      /* ── FEEDBACK BUBBLE ── */
-      .feedback-bubble {
-        margin-top: 18px;
-        border-radius: 18px;
-        padding: 14px 18px;
-        font-size: 14px;
-        font-weight: 700;
-        line-height: 1.6;
-        box-shadow: var(--shadow-sm);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        min-height: 52px;
-        background: linear-gradient(135deg, #fff0f6, #f0f8ff);
-        border: 2.5px solid var(--dark);
-      }
-      .activism-card .feedback-bubble {
-        background: rgba(199, 125, 255, 0.15);
-        border-color: var(--purple);
-        color: white;
-      }
-      .feedback-bubble .fb-icon {
-        font-size: 20px;
-        flex-shrink: 0;
-      }
-      .feedback-bubble .fb-text {
-        flex: 1;
-      }
-      .feedback-loading {
-        display: flex;
-        gap: 5px;
-        align-items: center;
-      }
-      .feedback-loading span {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        border: 2px solid currentColor;
-        animation: bounce 0.9s ease-in-out infinite;
-      }
-      .feedback-loading span:nth-child(1) {
-        background: var(--pink);
-      }
-      .feedback-loading span:nth-child(2) {
-        background: var(--yellow);
-        animation-delay: 0.15s;
-      }
-      .feedback-loading span:nth-child(3) {
-        background: var(--mint);
-        animation-delay: 0.3s;
-      }
-
-      .btn-next {
-        width: 100%;
-        background: var(--dark);
-        color: white;
-        border: 2.5px solid var(--dark);
-        border-radius: 14px;
-        padding: 16px;
-        font-family: 'Nunito', sans-serif;
-        font-weight: 900;
-        font-size: 16px;
-        cursor: pointer;
-        box-shadow: var(--shadow-sm);
-        transition: all 0.15s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        margin-top: 16px;
-      }
-      .btn-next:hover {
-        transform: translate(-2px, -2px);
-        box-shadow: var(--shadow);
-        background: #444;
-      }
-      .btn-next:active {
-        transform: translate(2px, 2px);
-        box-shadow: none;
-      }
-      .btn-next:disabled {
-        opacity: 0.4;
-        cursor: default;
-        transform: none;
-        box-shadow: var(--shadow-sm);
-      }
-
-      /* ── LOADING ── */
-      .loading-card {
-        text-align: center;
-        padding: 60px 32px;
-      }
-      .loading-blob {
-        width: 100px;
-        height: 100px;
-        margin: 0 auto 28px;
-        background: linear-gradient(135deg, var(--pink), var(--purple));
-        border-radius: 50%;
-        border: 3px solid var(--dark);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 44px;
-        animation: blobPulse 1.2s ease-in-out infinite;
-        box-shadow: var(--shadow);
-      }
-      @keyframes blobPulse {
-        0%,
-        100% {
-          transform: scale(1);
-          border-radius: 50%;
-        }
-        33% {
-          transform: scale(1.08);
-          border-radius: 40% 60% 55% 45%;
-        }
-        66% {
-          transform: scale(0.95);
-          border-radius: 55% 45% 40% 60%;
-        }
-      }
-      .loading-text {
-        font-family: 'Nunito', sans-serif;
-        font-weight: 800;
-        font-size: 18px;
-        margin-bottom: 8px;
-      }
-      .loading-sub {
-        font-size: 13px;
-        color: #aaa;
-      }
-      .loading-dots {
-        display: flex;
-        justify-content: center;
-        gap: 8px;
-        margin-top: 20px;
-      }
-      .loading-dots span {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        border: 2px solid var(--dark);
-        animation: bounce 1s ease-in-out infinite;
-      }
-      .loading-dots span:nth-child(1) {
-        background: var(--pink);
-      }
-      .loading-dots span:nth-child(2) {
-        background: var(--yellow);
-        animation-delay: 0.15s;
-      }
-      .loading-dots span:nth-child(3) {
-        background: var(--mint);
-        animation-delay: 0.3s;
-      }
-      @keyframes bounce {
-        0%,
-        100% {
-          transform: translateY(0);
-        }
-        50% {
-          transform: translateY(-10px);
-        }
-      }
-
-      /* ── RESULT ── */
-      .result-header {
-        text-align: center;
-        margin-bottom: 28px;
-      }
-      .result-emoji-wrap {
-        position: relative;
-        width: 120px;
-        height: 120px;
-        margin: 0 auto 16px;
-      }
-      .result-circle {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        border: 4px solid var(--dark);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 52px;
-        box-shadow: var(--shadow-lg);
-        animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-      }
-      .result-circle.buy {
-        background: linear-gradient(135deg, var(--green), var(--mint));
-      }
-      .result-circle.wait {
-        background: linear-gradient(135deg, var(--yellow), var(--coral));
-      }
-      .result-circle.skip {
-        background: linear-gradient(135deg, #ffb3c6, var(--pink));
-      }
-
-      .confetti-bits {
-        position: absolute;
-        top: -10px;
-        left: -10px;
-        right: -10px;
-        bottom: -10px;
-        pointer-events: none;
-      }
-      .confetti-bit {
-        position: absolute;
-        width: 8px;
-        height: 8px;
-        border-radius: 2px;
-        border: 2px solid var(--dark);
-        animation: confettiFly 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        animation-delay: var(--delay, 0s);
-        opacity: 0;
-      }
-      @keyframes confettiFly {
-        0% {
-          transform: translate(50%, 50%) rotate(0deg) scale(0);
-          opacity: 1;
-        }
-        100% {
-          transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(1);
-          opacity: 0;
-        }
-      }
-
-      .result-score-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: var(--dark);
-        color: white;
-        padding: 6px 16px;
-        border-radius: 100px;
-        font-family: 'Nunito', sans-serif;
-        font-weight: 800;
-        font-size: 14px;
-        margin-bottom: 12px;
-      }
-      .result-verdict {
-        font-family: 'Nunito', sans-serif;
-        font-weight: 900;
-        font-size: clamp(28px, 5vw, 40px);
-        line-height: 1.2;
-        margin-bottom: 10px;
-      }
-      .result-verdict.buy {
-        color: #00a86b;
-      }
-      .result-verdict.wait {
-        color: #e67e00;
-      }
-      .result-verdict.skip {
-        color: var(--pink);
-      }
-      .result-desc {
-        font-size: 14px;
-        color: #777;
-        line-height: 1.8;
-        margin-bottom: 28px;
-      }
-
-      /* Timeline */
-      .timeline-title {
-        font-family: 'Nunito', sans-serif;
-        font-weight: 800;
-        font-size: 13px;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        margin-bottom: 16px;
-        color: #aaa;
-      }
-      .timeline {
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-        margin-bottom: 24px;
-        position: relative;
-      }
-      .timeline::before {
-        content: '';
-        position: absolute;
-        left: 18px;
-        top: 0;
-        bottom: 0;
-        width: 2px;
-        background: repeating-linear-gradient(
-          to bottom,
-          var(--dark) 0,
-          var(--dark) 4px,
-          transparent 4px,
-          transparent 8px
-        );
-        opacity: 0.12;
-      }
-
-      .tl-item {
-        display: flex;
-        gap: 14px;
-        align-items: flex-start;
-        padding: 10px 0;
-      }
-      .tl-dot {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        border: 2.5px solid var(--dark);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-        flex-shrink: 0;
-        background: var(--white);
-        box-shadow: var(--shadow-sm);
-        z-index: 1;
-      }
-      .tl-dot.positive {
-        background: #e8fdf2;
-      }
-      .tl-dot.negative {
-        background: #fff0f0;
-      }
-      .tl-dot.neutral {
-        background: #fffde8;
-      }
-      .tl-dot.activism {
-        background: #1a1a2e;
-        font-size: 14px;
-        border-color: #1a1a2e;
-      }
-
-      .tl-body {
-        flex: 1;
-        padding-top: 4px;
-      }
-      .tl-q {
-        font-size: 11px;
-        color: #bbb;
-        margin-bottom: 3px;
-      }
-      .tl-a {
-        font-weight: 700;
-        font-size: 13px;
-        margin-bottom: 5px;
-      }
-      .tl-fb {
-        font-size: 13px;
-        color: #555;
-        line-height: 1.6;
-        background: var(--bg);
-        border: 1.5px solid #eee;
-        border-radius: 10px;
-        padding: 8px 12px;
-      }
-
-      .btn-reset {
-        width: 100%;
-        background: var(--yellow);
-        color: var(--dark);
-        border: 2.5px solid var(--dark);
-        border-radius: 16px;
-        padding: 16px;
-        font-family: 'Nunito', sans-serif;
-        font-weight: 900;
-        font-size: 16px;
-        cursor: pointer;
-        box-shadow: var(--shadow);
-        transition: all 0.15s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-      }
-      .btn-reset:hover {
-        transform: translate(-2px, -2px);
-        box-shadow: var(--shadow-lg);
-      }
-      .btn-reset:active {
-        transform: translate(3px, 3px);
-        box-shadow: none;
-      }
-
-      /* ── MODAL ── */
-      .modal-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(45, 45, 45, 0.6);
-        z-index: 200;
-        align-items: flex-end;
-        justify-content: center;
-      }
-      .modal-overlay.open {
-        display: flex;
-      }
-      .modal {
-        background: var(--white);
-        border: 3px solid var(--dark);
-        border-radius: 28px 28px 0 0;
-        padding: 28px;
-        width: 100%;
-        max-width: 560px;
-        max-height: 70vh;
-        overflow-y: auto;
-        box-shadow: 0 -6px 0 var(--dark);
-        animation: slideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
-      @keyframes slideUp {
-        from {
-          transform: translateY(100%);
-        }
-        to {
-          transform: translateY(0);
-        }
-      }
-      .modal-handle {
-        width: 40px;
-        height: 5px;
-        background: var(--dark);
-        border-radius: 100px;
-        margin: 0 auto 20px;
-      }
-      .modal-title {
-        font-family: 'Nunito', sans-serif;
-        font-weight: 900;
-        font-size: 20px;
-        margin-bottom: 20px;
-      }
-      .hist-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 14px 0;
-        border-bottom: 2px dashed #eee;
-      }
-      .hist-item:last-child {
-        border-bottom: none;
-      }
-      .hist-name {
-        font-weight: 700;
-        font-size: 15px;
-      }
-      .hist-meta {
-        font-size: 12px;
-        color: #bbb;
-        margin-top: 3px;
-      }
-      .hist-badge {
-        font-family: 'Nunito', sans-serif;
-        font-weight: 800;
-        font-size: 12px;
-        padding: 5px 12px;
-        border-radius: 100px;
-        border: 2px solid var(--dark);
-        white-space: nowrap;
-      }
-      .hist-badge.buy {
-        background: var(--green);
-      }
-      .hist-badge.wait {
-        background: var(--yellow);
-      }
-      .hist-badge.skip {
-        background: #ffb3c6;
-      }
-      .empty-hist {
-        text-align: center;
-        color: #ccc;
-        font-size: 14px;
-        padding: 40px 0;
-      }
-      .modal-close-btn {
-        width: 100%;
-        background: var(--bg);
-        border: 2px solid var(--dark);
-        border-radius: 12px;
-        padding: 12px;
-        font-family: 'Nunito', sans-serif;
-        font-weight: 800;
-        font-size: 14px;
-        cursor: pointer;
-        margin-top: 16px;
-        transition: all 0.15s;
-      }
-      .modal-close-btn:hover {
-        background: var(--dark);
-        color: white;
-      }
-
-      ::-webkit-scrollbar {
-        width: 6px;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: var(--pink);
-        border-radius: 100px;
-      }
-    </style>
+    <link rel="stylesheet" href="/css/style.css" />
   </head>
   <body>
     <div class="floaties" id="floaties"></div>
 
+    <!-- ── Header ── -->
     <header class="header">
       <div class="logo">
         <span class="logo-badge">✨</span>ときめきチェッカー
       </div>
-      <button class="history-pill" onclick="openHistory()">📋 履歴</button>
+      <div class="header-right">
+        <div class="user-info">
+          <img
+            id="user-picture"
+            class="user-avatar"
+            src=""
+            alt=""
+            style="display: none"
+          />
+          <span id="user-name"></span>
+        </div>
+        <button class="pill-btn mint" onclick="App.showSavings()">
+          💰 節約
+        </button>
+        <button class="pill-btn yellow" onclick="App.openHistory()">
+          📋 履歴
+        </button>
+        <button class="pill-btn light" onclick="App.handleLogout()">
+          ログアウト
+        </button>
+      </div>
     </header>
 
     <div id="app">
-      <!-- Screen 1: Input -->
-      <div class="screen active" id="screen-input">
+      <!-- ══ Screen: Login ══ -->
+      <div class="screen" id="screen-login">
+        <div class="card">
+          <div class="login-logo">✨</div>
+          <div class="login-title">ときめきチェッカー</div>
+          <p class="login-sub">
+            欲しいものを6つの視点でチェック。<br />
+            ときめき・必要性・見栄・代替手段・消費の本質まで。
+          </p>
+          <div class="login-features">
+            <div class="login-feature">
+              <span class="login-feature-icon">🔍</span
+              >購買衝動を6つの視点で分析
+            </div>
+            <div class="login-feature">
+              <span class="login-feature-icon">🤖</span
+              >AIが各回答にフィードバック
+            </div>
+            <div class="login-feature">
+              <span class="login-feature-icon">💰</span>節約額を記録・累計表示
+            </div>
+            <div class="login-feature">
+              <span class="login-feature-icon">📋</span>チェック履歴をDBに保存
+            </div>
+          </div>
+          <button class="btn-google" onclick="App.handleLogin()">
+            <svg width="20" height="20" viewBox="0 0 48 48">
+              <path
+                fill="#EA4335"
+                d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+              />
+              <path
+                fill="#4285F4"
+                d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+              />
+              <path
+                fill="#34A853"
+                d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+              />
+            </svg>
+            Googleでログイン
+          </button>
+        </div>
+      </div>
+
+      <!-- ══ Screen: Input ══ -->
+      <div class="screen" id="screen-input">
         <div class="card">
           <div class="screen-title">
             欲しいもの、<br /><span class="hl">本音で</span>チェック！🔍
@@ -1072,19 +110,19 @@
           />
           <div class="field-label">
             <span class="dot" style="background: var(--mint)"></span
-            >お値段（省略OK）
+            >お値段（節約額の記録に使います）
           </div>
           <div class="price-row">
             <span class="yen-badge">¥</span>
             <input type="number" id="item-price" placeholder="0" min="0" />
           </div>
-          <button class="btn-start" onclick="startCheck()">
+          <button class="btn-primary pink" onclick="App.startCheck()">
             チェックスタート！ 🚀
           </button>
         </div>
       </div>
 
-      <!-- Screen 2: Questions -->
+      <!-- ══ Screen: Questions ══ -->
       <div class="screen" id="screen-questions">
         <div class="card" id="q-card">
           <div class="progress-wrap">
@@ -1109,16 +147,12 @@
             style="display: none"
           >
             <span class="fb-icon">🤖</span>
-            <span class="fb-text" id="fb-text">
-              <span class="feedback-loading"
-                ><span></span><span></span><span></span
-              ></span>
-            </span>
+            <span class="fb-text" id="fb-text"></span>
           </div>
           <button
             class="btn-next"
             id="btn-next"
-            onclick="nextQuestion()"
+            onclick="App.nextQuestion()"
             disabled
             style="display: none"
           >
@@ -1127,7 +161,7 @@
         </div>
       </div>
 
-      <!-- Screen 3: Loading -->
+      <!-- ══ Screen: Loading ══ -->
       <div class="screen" id="screen-loading">
         <div class="card loading-card">
           <div class="loading-blob">🔮</div>
@@ -1139,9 +173,10 @@
         </div>
       </div>
 
-      <!-- Screen 4: Result -->
+      <!-- ══ Screen: Result ══ -->
       <div class="screen" id="screen-result">
         <div class="card">
+          <!-- Verdict -->
           <div class="result-header">
             <div class="result-emoji-wrap">
               <div class="result-circle" id="result-circle"></div>
@@ -1151,607 +186,99 @@
             <div class="result-verdict" id="result-verdict"></div>
             <p class="result-desc" id="result-desc"></p>
           </div>
+
+          <!-- Did you buy it? -->
+          <div class="decision-section" id="decision-section">
+            <div class="decision-title">💬 実際にどうしましたか？</div>
+            <div class="decision-sub">記録しておくと節約額が積み上がります</div>
+            <div class="decision-btns">
+              <button
+                class="decision-btn bought"
+                onclick="App.recordDecision(true)"
+              >
+                🛒 買った
+              </button>
+              <button
+                class="decision-btn skipped"
+                onclick="App.recordDecision(false)"
+              >
+                🌿 買わなかった
+              </button>
+            </div>
+          </div>
+
+          <!-- Savings confirmed block (shown after recording skip) -->
+          <div
+            class="savings-result-block"
+            id="savings-result-block"
+            style="display: none"
+          >
+            <div class="savings-result-label">今回の節約額 💰</div>
+            <div class="savings-result-num" id="savings-result-amount">¥0</div>
+            <div class="savings-total-label">
+              累計節約額：<span
+                class="savings-total-num"
+                id="savings-total-inline"
+                >¥0</span
+              >
+            </div>
+          </div>
+
+          <!-- Timeline -->
           <div class="timeline-title">📝 6つの視点からのフィードバック</div>
           <div class="timeline" id="timeline"></div>
-          <button class="btn-reset" onclick="resetApp()">
+
+          <button class="btn-primary pink" onclick="App.resetApp()">
             🔁 もう一度チェックする
           </button>
         </div>
       </div>
-    </div>
 
+      <!-- ══ Screen: Savings ══ -->
+      <div class="screen" id="screen-savings">
+        <div class="card">
+          <div class="savings-hero">
+            <div class="savings-hero-label">あなたの累計節約額 🌿</div>
+            <div class="savings-hero-amount" id="savings-amount">¥0</div>
+            <div class="savings-hero-sub">
+              チェックで「買わなかった」を選んだ合計
+            </div>
+          </div>
+          <div class="savings-list-title">節約の記録</div>
+          <div id="savings-list"></div>
+          <button
+            class="btn-primary yellow"
+            style="margin-top: 24px"
+            onclick="UI.showScreen('screen-input')"
+          >
+            ← もどる
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- /#app -->
+
+    <!-- ── History Modal ── -->
     <div
       class="modal-overlay"
       id="modal-overlay"
-      onclick="handleOverlayClick(event)"
+      onclick="App.handleOverlayClick(event)"
     >
       <div class="modal">
         <div class="modal-handle"></div>
         <div class="modal-title">📋 チェック履歴</div>
         <div id="history-list"></div>
-        <button class="modal-close-btn" onclick="closeHistory()">閉じる</button>
+        <button class="modal-close-btn" onclick="App.closeHistory()">
+          閉じる
+        </button>
       </div>
     </div>
 
-    <script>
-      // ── Floaties ──
-      [
-        '✨',
-        '💫',
-        '⭐',
-        '🌟',
-        '💖',
-        '🛍️',
-        '💸',
-        '🌈',
-        '🎀',
-        '💝',
-        '🌸',
-        '🍭',
-      ].forEach((em) => {
-        const el = document.createElement('div');
-        el.className = 'floaty';
-        el.textContent = em;
-        el.style.cssText = `left:${Math.random() * 90}%;top:${
-          Math.random() * 90
-        }%;animation-duration:${6 + Math.random() * 8}s;animation-delay:${
-          Math.random() * 5
-        }s;font-size:${18 + Math.random() * 18}px;`;
-        document.getElementById('floaties').appendChild(el);
-      });
+    <!-- ── Toast ── -->
+    <div class="toast" id="toast"></div>
 
-      // ── Questions ──────────────────────────────────────────────────────────────
-      const questions = [
-        {
-          theme: 'tokimeki',
-          themeLabel: '💖 ときめき',
-          themeColor: 'var(--pink)',
-          text: '今この瞬間、心からときめいている？💖',
-          sub: '「見た瞬間に欲しくなった」のか「なんとなく気になってる」のか、正直に。',
-          options: [
-            {
-              icon: '✨',
-              label: '強くときめく',
-              sub: '見るたびに心が躍る',
-              score: 3,
-              color: 'var(--pink)',
-            },
-            {
-              icon: '😊',
-              label: 'まあ好き',
-              sub: 'あったら嬉しいな程度',
-              score: 1,
-              color: 'var(--blue)',
-            },
-            {
-              icon: '🤔',
-              label: 'なんとなく欲しい',
-              sub: '誰かが持ってたから気になった',
-              score: -1,
-              color: 'var(--yellow)',
-            },
-            {
-              icon: '😐',
-              label: 'よくわからない',
-              sub: 'なぜ欲しいか言えない',
-              score: -2,
-              color: 'var(--purple)',
-            },
-          ],
-        },
-        {
-          theme: 'mise',
-          themeLabel: '👁️ 見栄チェック',
-          themeColor: 'var(--coral)',
-          text: '正直に言って、誰かに見せたい気持ちはある？👁️',
-          sub: '「持ってたらカッコいい」「〇〇さんが持ってた」という動機はないか自問してみて。',
-          options: [
-            {
-              icon: '🙅',
-              label: '全くない',
-              sub: '純粋に自分のために欲しい',
-              score: 3,
-              color: 'var(--mint)',
-            },
-            {
-              icon: '🤏',
-              label: '少しはある',
-              sub: 'でも本質は自分用',
-              score: 1,
-              color: 'var(--blue)',
-            },
-            {
-              icon: '👀',
-              label: 'けっこうある',
-              sub: '誰かに見せたい気持ちが強め',
-              score: -2,
-              color: 'var(--yellow)',
-            },
-            {
-              icon: '🏆',
-              label: 'それが主な理由',
-              sub: '承認されたくて欲しい',
-              score: -3,
-              color: 'var(--coral)',
-            },
-          ],
-        },
-        {
-          theme: 'hitsuyou',
-          themeLabel: '🎯 必要性',
-          themeColor: 'var(--blue)',
-          text: 'それを買う、具体的な理由を言える？🎯',
-          sub: '「なぜ必要なのか」を30秒で説明できれば本物の必要性。説明できないなら衝動かも。',
-          options: [
-            {
-              icon: '🔧',
-              label: '明確に説明できる',
-              sub: '具体的な用途・場面がある',
-              score: 3,
-              color: 'var(--mint)',
-            },
-            {
-              icon: '📝',
-              label: 'だいたい言える',
-              sub: 'ふんわりとした理由はある',
-              score: 1,
-              color: 'var(--blue)',
-            },
-            {
-              icon: '🌀',
-              label: 'あまり言えない',
-              sub: 'なんとなく欲しいが先にある',
-              score: -2,
-              color: 'var(--yellow)',
-            },
-            {
-              icon: '❓',
-              label: '言えない',
-              sub: '気づいたら欲しくなってた',
-              score: -3,
-              color: 'var(--coral)',
-            },
-          ],
-        },
-        {
-          theme: 'tsukauka',
-          themeLabel: '📅 使い続けるか',
-          themeColor: 'var(--green)',
-          text: '3ヶ月後も使っている自分が想像できる？📅',
-          sub: '「買った直後だけ使って放置」という過去のパターンに正直に向き合って。',
-          options: [
-            {
-              icon: '💪',
-              label: '絶対使ってる',
-              sub: '毎日の生活に組み込める',
-              score: 3,
-              color: 'var(--mint)',
-            },
-            {
-              icon: '🙂',
-              label: 'たぶん使ってる',
-              sub: '週に数回は使うはず',
-              score: 1,
-              color: 'var(--blue)',
-            },
-            {
-              icon: '😅',
-              label: '自信がない',
-              sub: '飽きやすいタイプかもしれない',
-              score: -2,
-              color: 'var(--yellow)',
-            },
-            {
-              icon: '📦',
-              label: 'たぶん放置する',
-              sub: '似たものがすでに眠ってる',
-              score: -3,
-              color: 'var(--coral)',
-            },
-          ],
-        },
-        {
-          theme: 'daigae',
-          themeLabel: '♻️ 代替手段',
-          themeColor: 'var(--mint)',
-          text: 'もっと安く・無料で手に入れる方法はない？♻️',
-          sub: '本なら図書館・ブックオフ。音楽ならサブスク。食品なら自炊。コーヒーならドリップバッグ。本当に「買う」しかないか？',
-          options: [
-            {
-              icon: '🚫',
-              label: '代替手段はない',
-              sub: 'これ以外に方法がない',
-              score: 3,
-              color: 'var(--mint)',
-            },
-            {
-              icon: '🔍',
-              label: '探せばあるかも',
-              sub: 'まだちゃんと調べていない',
-              score: -1,
-              color: 'var(--yellow)',
-            },
-            {
-              icon: '📚',
-              label: '代替手段がある',
-              sub: 'でも買う方が便利・快適',
-              score: -1,
-              color: 'var(--blue)',
-            },
-            {
-              icon: '💡',
-              label: '代替手段で十分',
-              sub: '正直、そっちでいい気もする',
-              score: -3,
-              color: 'var(--coral)',
-            },
-          ],
-        },
-        {
-          theme: 'shihonshugi',
-          themeLabel: '🌍 消費を問い直す',
-          themeColor: '#C77DFF',
-          text: 'その欲求、本当に「自分の意志」から来てる？🌍',
-          sub: '広告・SNS・インフルエンサー・流行・「みんな持ってる」空気に無意識に乗せられていないか。資本主義は私たちに「欲しい」と感じさせるのがとても上手い。',
-          options: [
-            {
-              icon: '🧠',
-              label: '自分の意志で欲しい',
-              sub: '広告や流行とは関係ない',
-              score: 3,
-              color: '#C77DFF',
-            },
-            {
-              icon: '🤷',
-              label: '少し影響はある',
-              sub: 'SNSで見てから気になった',
-              score: 0,
-              color: '#74B9FF',
-            },
-            {
-              icon: '📱',
-              label: 'SNS・広告がきっかけ',
-              sub: '見なければ欲しくなかったかも',
-              score: -2,
-              color: '#FFE14D',
-            },
-            {
-              icon: '🏭',
-              label: '完全に流行に乗ってる',
-              sub: '資本主義の思うツボかも',
-              score: -3,
-              color: '#FF8B6B',
-            },
-          ],
-        },
-      ];
-
-      // ── State ──
-      let currentQ = 0,
-        scores = [],
-        feedbacks = [],
-        answers = [];
-      let itemName = '',
-        itemPrice = '';
-      let history = [];
-      try {
-        history = JSON.parse(localStorage.getItem('tokimeki_history') || '[]');
-      } catch (e) {}
-
-      // ── Screen ──
-      function showScreen(id) {
-        document
-          .querySelectorAll('.screen')
-          .forEach((s) => s.classList.remove('active'));
-        setTimeout(() => {
-          const el = document.getElementById(id);
-          if (el) el.classList.add('active');
-        }, 30);
-      }
-
-      function startCheck() {
-        itemName =
-          document.getElementById('item-name').value.trim() || 'この商品';
-        itemPrice = document.getElementById('item-price').value;
-        currentQ = 0;
-        scores = [];
-        feedbacks = [];
-        answers = [];
-        showScreen('screen-questions');
-        renderQ();
-      }
-
-      function renderQ() {
-        const q = questions[currentQ];
-        const total = questions.length;
-        const isActivism = q.theme === 'shihonshugi';
-
-        // Card theme
-        const card = document.getElementById('q-card');
-        card.className = isActivism ? 'card activism-card' : 'card';
-
-        // Chip
-        const chip = document.getElementById('q-chip');
-        chip.className = isActivism ? 'q-item-chip activism' : 'q-item-chip';
-        document.getElementById('q-chip-name').textContent = itemName;
-
-        // Progress
-        document.getElementById('progress-fill').style.width =
-          (currentQ / total) * 100 + '%';
-        document.getElementById('q-number-label').textContent = `質問 ${
-          currentQ + 1
-        } / ${total}`;
-
-        // Step dots
-        const dotsEl = document.getElementById('step-dots');
-        dotsEl.innerHTML = '';
-        for (let i = 0; i < total; i++) {
-          const d = document.createElement('div');
-          d.className =
-            'step-dot' +
-            (i < currentQ ? ' done' : i === currentQ ? ' active' : '');
-          dotsEl.appendChild(d);
-        }
-
-        // Theme tag
-        const tag = document.getElementById('q-theme-tag');
-        tag.textContent = q.themeLabel;
-        tag.style.background = isActivism
-          ? 'rgba(199,125,255,.2)'
-          : q.themeColor + '33';
-        tag.style.borderColor = isActivism ? '#C77DFF' : q.themeColor;
-        tag.style.color = isActivism
-          ? '#C77DFF'
-          : q.themeColor === 'var(--yellow)'
-          ? '#b89300'
-          : q.themeColor;
-
-        document.getElementById('q-text').textContent = q.text;
-        document.getElementById('q-sub').textContent = q.sub;
-
-        // Options
-        const optsEl = document.getElementById('q-options');
-        optsEl.innerHTML = '';
-        q.options.forEach((opt) => {
-          const btn = document.createElement('button');
-          btn.className = 'opt-btn';
-          btn.style.setProperty('--opt-color', opt.color);
-          btn.innerHTML = `<span class="opt-icon">${opt.icon}</span><span class="opt-label">${opt.label}</span><span class="opt-sub">${opt.sub}</span>`;
-          btn.onclick = () => pickAnswer(opt, btn);
-          optsEl.appendChild(btn);
-        });
-
-        // Reset feedback + next btn
-        document.getElementById('feedback-bubble').style.display = 'none';
-        const btnNext = document.getElementById('btn-next');
-        btnNext.style.display = 'none';
-        btnNext.disabled = true;
-        btnNext.textContent =
-          currentQ < questions.length - 1 ? '次の質問へ →' : '結果を見る 🎉';
-      }
-
-      async function pickAnswer(opt, btn) {
-        document.querySelectorAll('.opt-btn').forEach((b) => {
-          b.disabled = true;
-          b.classList.remove('selected');
-        });
-        btn.classList.add('selected');
-        scores.push(opt.score);
-        answers.push({
-          theme: questions[currentQ].theme,
-          themeLabel: questions[currentQ].themeLabel,
-          q: questions[currentQ].text,
-          a: opt.label,
-          score: opt.score,
-        });
-
-        // Show loading bubble
-        const bubble = document.getElementById('feedback-bubble');
-        const fbText = document.getElementById('fb-text');
-        bubble.style.display = 'flex';
-        fbText.innerHTML =
-          '<span class="feedback-loading"><span></span><span></span><span></span></span>';
-
-        fetchFeedback(opt)
-          .then((text) => {
-            feedbacks.push(text);
-            fbText.textContent = text;
-            document.getElementById('btn-next').disabled = false;
-          })
-          .catch(() => {
-            const fallback =
-              opt.score >= 2
-                ? '✅ 良いサインです！'
-                : opt.score <= -2
-                ? '⚠️ 少し立ち止まってみましょう'
-                : '📊 バランスが大切ですね';
-            feedbacks.push(fallback);
-            fbText.textContent = fallback;
-            document.getElementById('btn-next').disabled = false;
-          });
-
-        document.getElementById('btn-next').style.display = 'flex';
-      }
-
-      async function fetchFeedback(opt) {
-        const res = await fetch('/api/feedback', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            itemName,
-            itemPrice,
-            questionText: questions[currentQ].text,
-            answerText: opt.label,
-            answerScore: opt.score,
-            questionIndex: currentQ,
-            questionTheme: questions[currentQ].theme,
-          }),
-        });
-        if (!res.ok) throw new Error('API error');
-        const data = await res.json();
-        return data.feedback;
-      }
-
-      function nextQuestion() {
-        currentQ++;
-        if (currentQ >= questions.length) {
-          showScreen('screen-loading');
-          setTimeout(showResult, 1200);
-        } else {
-          renderQ();
-        }
-      }
-
-      function showResult() {
-        // Score: max possible = 3+3+3+3+3+3 = 18, min = -2-3-3-3-3-3 = -17
-        const MAX = 18,
-          MIN = -17;
-        const total = scores.reduce((a, b) => a + b, 0);
-        const pct = Math.max(0, Math.min(1, (total - MIN) / (MAX - MIN)));
-        const scorePct = Math.round(pct * 100);
-
-        let type, emoji, verdict, desc;
-
-        if (pct >= 0.65) {
-          type = 'buy';
-          emoji = '🛒';
-          verdict = '買っちゃおう！';
-          desc = `「${itemName}」は6つの視点からも本物の価値があると出ました。ときめきも必要性もある買い物です。後悔しないでしょう！`;
-        } else if (pct >= 0.4) {
-          type = 'wait';
-          emoji = '⏳';
-          verdict = 'もう少し待って';
-          desc = `「${itemName}」への気持ちはポジティブな面もありますが、いくつか引っかかる点もあります。1週間後にもう一度考えてみましょう。`;
-        } else {
-          type = 'skip';
-          emoji = '🌊';
-          verdict = '今回は見送ろう';
-          desc = `「${itemName}」への欲求は、外的な要因や一時的な衝動が強いかもしれません。節約した分を本当に大切なものへ。`;
-        }
-
-        const circle = document.getElementById('result-circle');
-        circle.className = `result-circle ${type}`;
-        circle.textContent = emoji;
-        if (type === 'buy') spawnConfetti();
-
-        document.getElementById(
-          'result-score'
-        ).textContent = `⭐ スコア ${scorePct}点 / 100点`;
-        const vEl = document.getElementById('result-verdict');
-        vEl.className = `result-verdict ${type}`;
-        vEl.textContent = verdict;
-        document.getElementById('result-desc').textContent = desc;
-
-        // Timeline
-        const tlEl = document.getElementById('timeline');
-        tlEl.innerHTML = answers
-          .map((a, i) => {
-            const isActivism = a.theme === 'shihonshugi';
-            const cls = isActivism
-              ? 'activism'
-              : a.score >= 2
-              ? 'positive'
-              : a.score <= -2
-              ? 'negative'
-              : 'neutral';
-            const icon = isActivism
-              ? '🌍'
-              : a.score >= 2
-              ? '✅'
-              : a.score <= -2
-              ? '⚠️'
-              : '📊';
-            return `
-        <div class="tl-item">
-          <div class="tl-dot ${cls}">${icon}</div>
-          <div class="tl-body">
-            <div class="tl-q">${a.themeLabel}</div>
-            <div class="tl-a">「${a.a}」を選択</div>
-            <div class="tl-fb">${feedbacks[i] || '—'}</div>
-          </div>
-        </div>`;
-          })
-          .join('');
-
-        // Save history
-        history.unshift({
-          name: itemName,
-          price: parseFloat(itemPrice) || 0,
-          type,
-          verdict,
-          score: scorePct,
-          date: new Date().toLocaleDateString('ja-JP', {
-            month: 'short',
-            day: 'numeric',
-          }),
-        });
-        if (history.length > 20) history.pop();
-        try {
-          localStorage.setItem('tokimeki_history', JSON.stringify(history));
-        } catch (e) {}
-
-        showScreen('screen-result');
-      }
-
-      function spawnConfetti() {
-        const c = document.getElementById('confetti-container');
-        c.innerHTML = '';
-        const colors = [
-          'var(--pink)',
-          'var(--yellow)',
-          'var(--mint)',
-          'var(--purple)',
-          'var(--blue)',
-        ];
-        for (let i = 0; i < 12; i++) {
-          const bit = document.createElement('div');
-          const angle = (i / 12) * 360;
-          const dist = 50 + Math.random() * 30;
-          bit.className = 'confetti-bit';
-          bit.style.cssText = `background:${colors[i % colors.length]};--tx:${
-            Math.cos((angle * Math.PI) / 180) * dist
-          }px;--ty:${Math.sin((angle * Math.PI) / 180) * dist}px;--rot:${
-            Math.random() * 360
-          }deg;--delay:${Math.random() * 0.3}s;top:50%;left:50%;`;
-          c.appendChild(bit);
-        }
-      }
-
-      function resetApp() {
-        document.getElementById('item-name').value = '';
-        document.getElementById('item-price').value = '';
-        showScreen('screen-input');
-      }
-
-      function openHistory() {
-        const list = document.getElementById('history-list');
-        list.innerHTML = !history.length
-          ? '<div class="empty-hist">😊 まだ履歴がありません</div>'
-          : history
-              .map(
-                (h) =>
-                  `<div class="hist-item"><div><div class="hist-name">${
-                    h.name
-                  }</div><div class="hist-meta">${h.date}${
-                    h.price ? ' · ¥' + h.price.toLocaleString() : ''
-                  } · ${h.score}点</div></div><span class="hist-badge ${
-                    h.type
-                  }">${h.verdict}</span></div>`
-              )
-              .join('');
-        document.getElementById('modal-overlay').classList.add('open');
-      }
-      function closeHistory() {
-        document.getElementById('modal-overlay').classList.remove('open');
-      }
-      function handleOverlayClick(e) {
-        if (e.target === document.getElementById('modal-overlay'))
-          closeHistory();
-      }
-
-      document.getElementById('item-name').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') startCheck();
-      });
-    </script>
+    <script src="/js/questions.js"></script>
+    <script src="/js/ui.js"></script>
+    <script src="/js/app.js"></script>
   </body>
 </html>

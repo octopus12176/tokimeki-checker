@@ -1,0 +1,10 @@
+{
+  "name": "tokimeki-checker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@vercel/kv": "^1.0.1",
+    "cookie": "^0.6.0"
+  }
+}

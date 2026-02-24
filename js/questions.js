@@ -1,0 +1,81 @@
+// js/questions.js
+const QUESTIONS = [
+  {
+    theme: 'tokimeki',
+    themeLabel: '💖 ときめき',
+    themeColor: 'var(--pink)',
+    text: '今この瞬間、心からときめいている？💖',
+    sub: '「見た瞬間に欲しくなった」のか「なんとなく気になってる」のか、正直に。',
+    options: [
+      { icon:'✨', label:'強くときめく',     sub:'見るたびに心が躍る',            score:3,  color:'var(--pink)'   },
+      { icon:'😊', label:'まあ好き',          sub:'あったら嬉しいな程度',          score:1,  color:'var(--blue)'   },
+      { icon:'🤔', label:'なんとなく欲しい',  sub:'誰かが持ってたから気になった',  score:-1, color:'var(--yellow)' },
+      { icon:'😐', label:'よくわからない',    sub:'なぜ欲しいか言えない',          score:-2, color:'var(--purple)' },
+    ],
+  },
+  {
+    theme: 'mise',
+    themeLabel: '👁️ 見栄チェック',
+    themeColor: 'var(--coral)',
+    text: '正直に言って、誰かに見せたい気持ちはある？👁️',
+    sub: '「持ってたらカッコいい」「〇〇さんが持ってた」という動機はないか自問して。',
+    options: [
+      { icon:'🙅', label:'全くない',         sub:'純粋に自分のために欲しい',      score:3,  color:'var(--mint)'   },
+      { icon:'🤏', label:'少しはある',        sub:'でも本質は自分用',              score:1,  color:'var(--blue)'   },
+      { icon:'👀', label:'けっこうある',      sub:'誰かに見せたい気持ちが強め',    score:-2, color:'var(--yellow)' },
+      { icon:'🏆', label:'それが主な理由',    sub:'承認されたくて欲しい',          score:-3, color:'var(--coral)'  },
+    ],
+  },
+  {
+    theme: 'hitsuyou',
+    themeLabel: '🎯 必要性',
+    themeColor: 'var(--blue)',
+    text: 'それを買う、具体的な理由を言える？🎯',
+    sub: '「なぜ必要なのか」を30秒で説明できれば本物の必要性。説明できないなら衝動かも。',
+    options: [
+      { icon:'🔧', label:'明確に説明できる', sub:'具体的な用途・場面がある',      score:3,  color:'var(--mint)'   },
+      { icon:'📝', label:'だいたい言える',   sub:'ふんわりとした理由はある',       score:1,  color:'var(--blue)'   },
+      { icon:'🌀', label:'あまり言えない',   sub:'なんとなく欲しいが先にある',     score:-2, color:'var(--yellow)' },
+      { icon:'❓', label:'言えない',         sub:'気づいたら欲しくなってた',       score:-3, color:'var(--coral)'  },
+    ],
+  },
+  {
+    theme: 'tsukauka',
+    themeLabel: '📅 使い続けるか',
+    themeColor: 'var(--green)',
+    text: '3ヶ月後も使っている自分が想像できる？📅',
+    sub: '「買った直後だけ使って放置」という過去のパターンに正直に向き合って。',
+    options: [
+      { icon:'💪', label:'絶対使ってる',     sub:'毎日の生活に組み込める',        score:3,  color:'var(--mint)'   },
+      { icon:'🙂', label:'たぶん使ってる',   sub:'週に数回は使うはず',            score:1,  color:'var(--blue)'   },
+      { icon:'😅', label:'自信がない',        sub:'飽きやすいタイプかもしれない',  score:-2, color:'var(--yellow)' },
+      { icon:'📦', label:'たぶん放置する',    sub:'似たものがすでに眠ってる',      score:-3, color:'var(--coral)'  },
+    ],
+  },
+  {
+    theme: 'daigae',
+    themeLabel: '♻️ 代替手段',
+    themeColor: 'var(--mint)',
+    text: 'もっと安く・無料で手に入れる方法はない？♻️',
+    sub: '本なら図書館・ブックオフ。音楽ならサブスク。コーヒーならドリップバッグ。本当に「買う」しかないか？',
+    options: [
+      { icon:'🚫', label:'代替手段はない',   sub:'これ以外に方法がない',          score:3,  color:'var(--mint)'   },
+      { icon:'🔍', label:'探せばあるかも',   sub:'まだちゃんと調べていない',      score:-1, color:'var(--yellow)' },
+      { icon:'📚', label:'代替手段がある',   sub:'でも買う方が便利・快適',        score:-1, color:'var(--blue)'   },
+      { icon:'💡', label:'代替手段で十分',   sub:'正直、そっちでいい気もする',    score:-3, color:'var(--coral)'  },
+    ],
+  },
+  {
+    theme: 'shihonshugi',
+    themeLabel: '🌍 消費を問い直す',
+    themeColor: '#C77DFF',
+    text: 'その欲求、本当に「自分の意志」から来てる？🌍',
+    sub: '広告・SNS・インフルエンサー・流行・「みんな持ってる」空気に無意識に乗せられていないか。資本主義は私たちに「欲しい」と感じさせるのがとても上手い。',
+    options: [
+      { icon:'🧠', label:'自分の意志で欲しい', sub:'広告や流行とは関係ない',      score:3,  color:'#C77DFF'       },
+      { icon:'🤷', label:'少し影響はある',      sub:'SNSで見てから気になった',    score:0,  color:'#74B9FF'       },
+      { icon:'📱', label:'SNS・広告がきっかけ', sub:'見なければ欲しくなかったかも', score:-2, color:'#FFE14D'     },
+      { icon:'🏭', label:'完全に流行に乗ってる', sub:'資本主義の思うツボかも',    score:-3, color:'#FF8B6B'       },
+    ],
+  },
+];
