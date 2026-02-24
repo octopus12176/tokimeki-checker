@@ -1,47 +1,82 @@
 export default async function handler(req, res) {
-  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'POST')
+    return res.status(405).json({ error: 'Method not allowed' });
 
-  const { itemName, itemPrice, questionText, answerText, answerScore, questionIndex } = req.body;
+  const {
+    itemName,
+    itemPrice,
+    questionText,
+    answerText,
+    answerScore,
+    questionIndex,
+    questionTheme,
+  } = req.body;
 
   if (!itemName || !questionText || !answerText) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  const priceText = itemPrice ? `（価格：¥${Number(itemPrice).toLocaleString()}）` : '';
-  const scoreLabel = answerScore >= 2 ? 'ポジティブな回答' : answerScore <= -2 ? 'ネガティブな回答' : '中立的な回答';
+  const priceText = itemPrice
+    ? `（価格：¥${Number(itemPrice).toLocaleString()}）`
+    : '';
+  const scoreLabel =
+    answerScore >= 2
+      ? 'ポジティブな回答'
+      : answerScore <= -2
+      ? 'ネガティブな回答'
+      : '中立的な回答';
 
-  const prompt = `あなたは節約アドバイザーです。ユーザーが「${itemName}${priceText}」の購入を検討しています。
+  // Theme-specific instruction for richer, more contextual feedback
+  const themeInstructions = {
+    tokimeki:
+      'ときめきや感情的な価値について共感を込めてコメントしてください。',
+    mise: '見栄や承認欲求について、批判せず優しく本音に気づかせるコメントをしてください。',
+    hitsuyou: '必要性や購入目的の明確さについてコメントしてください。',
+    tsukauka: '実際に使い続けるかどうかの現実的な視点でコメントしてください。',
+    daigae:
+      '代替手段（図書館・中古・サブスクなど）の可能性を踏まえてコメントしてください。',
+    shihonshugi:
+      '消費文化・広告・資本主義への批判的視点を持ちながら、押しつけがましくなくコメントしてください。',
+  };
+
+  const themeGuide = themeInstructions[questionTheme] || '';
+
+  const prompt = `あなたは批評眼のある節約アドバイザーです。ユーザーが「${itemName}${priceText}」の購入を検討しています。
 以下の質問に対してユーザーが回答しました。
 
-質問（${questionIndex + 1}/5）：${questionText}
+質問テーマ：${questionTheme}
+質問（${questionIndex + 1}/6）：${questionText}
 ユーザーの回答：「${answerText}」（${scoreLabel}）
 
-この回答に対して、20〜35文字程度の短い日本語のフィードバックを1文だけ返してください。
-・絵文字を1つだけ文頭に使ってください
-・ポジティブな回答には背中を押すコメントを
-・ネガティブな回答には優しく気づきを促すコメントを
-・中立的な回答にはバランスの取れたコメントを
-・「！」や「ね」などで終わる自然な口語にしてください
-フィードバック文のみ返してください。余計な説明は不要です。`;
+${themeGuide}
+
+ルール：
+・20〜40文字程度の短い日本語フィードバックを1文だけ返す
+・文頭に絵文字を1つだけ使う
+・ポジティブな回答 → 背中を押すコメント
+・ネガティブな回答 → 優しく、でも鋭く気づきを促すコメント
+・中立的な回答 → バランスの取れた問いかけ
+・口語で自然に終わること（「ね」「よ」「！」など）
+・説教臭くならないこと
+フィードバック文のみ返してください。`;
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 80,
-        temperature: 0.7,
+        max_tokens: 100,
+        temperature: 0.75,
       }),
     });
 
@@ -54,7 +89,6 @@ export default async function handler(req, res) {
     const data = await response.json();
     const feedback = data.choices[0].message.content.trim();
     return res.status(200).json({ feedback });
-
   } catch (err) {
     console.error('Server error:', err);
     return res.status(500).json({ error: 'Internal server error' });
