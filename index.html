@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ときめきチェッカー💫</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink: #FF6B9D;
+      --yellow: #FFE14D;
+      --mint: #4ECDC4;
+      --coral: #FF8B6B;
+      --purple: #C77DFF;
+      --blue: #74B9FF;
+      --green: #55EFC4;
+      --bg: #FFF5F9;
+      --white: #FFFFFF;
+      --dark: #2D2D2D;
+      --shadow: 4px 4px 0px #2D2D2D;
+      --shadow-lg: 6px 6px 0px #2D2D2D;
+      --shadow-sm: 2px 2px 0px #2D2D2D;
+    }
+
+    html, body { min-height: 100%; background: var(--bg); font-family: 'Zen Maru Gothic', sans-serif; color: var(--dark); }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        radial-gradient(circle at 10% 20%, rgba(255,107,157,0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(78,205,196,0.08) 0%, transparent 40%);
+      pointer-events: none; z-index: 0;
+    }
+
+    .floaties { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .floaty { position: absolute; animation: floatAround linear infinite; opacity: 0.2; user-select: none; }
+    @keyframes floatAround {
+      0% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-28px) rotate(180deg); }
+      100% { transform: translateY(0) rotate(360deg); }
+    }
+
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      padding: 14px 24px;
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--white); border-bottom: 3px solid var(--dark);
+    }
+
+    .logo { display: flex; align-items: center; gap: 10px; font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 20px; }
+    .logo-badge { background: var(--pink); color: white; padding: 4px 12px; border-radius: 100px; border: 2px solid var(--dark); box-shadow: var(--shadow-sm); font-size: 16px; }
+
+    .history-pill {
+      background: var(--yellow); border: 2px solid var(--dark); box-shadow: var(--shadow-sm);
+      border-radius: 100px; padding: 8px 16px;
+      font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 13px;
+      cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 6px;
+    }
+    .history-pill:hover { transform: translate(-2px,-2px); box-shadow: var(--shadow); }
+    .history-pill:active { transform: translate(2px,2px); box-shadow: none; }
+
+    #app { position: relative; z-index: 1; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 100px 20px 40px; }
+
+    .screen { display: none; width: 100%; max-width: 540px; }
+    .screen.active { display: block; animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.85) translateY(20px); }
+      to   { opacity: 1; transform: scale(1)    translateY(0);    }
+    }
+
+    .card {
+      background: var(--white); border: 3px solid var(--dark);
+      border-radius: 24px; box-shadow: var(--shadow-lg); padding: 36px 32px;
+      position: relative; overflow: hidden;
+    }
+    .card::before {
+      content: ''; position: absolute; top: 0; right: 0;
+      width: 120px; height: 120px;
+      background: var(--yellow); border-radius: 0 24px 0 120px; opacity: 0.25; pointer-events: none;
+    }
+
+    /* ── INPUT ── */
+    .screen-title { font-family: 'Nunito', sans-serif; font-weight: 900; font-size: clamp(26px,5vw,36px); line-height: 1.25; margin-bottom: 8px; }
+    .screen-title .hl { background: var(--yellow); padding: 0 6px; border-radius: 6px; }
+    .screen-subtitle { font-size: 14px; color: #888; margin-bottom: 28px; line-height: 1.6; }
+
+    .field-label { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .field-label .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--pink); border: 2px solid var(--dark); }
+
+    input[type="text"], input[type="number"] {
+      width: 100%; border: 2.5px solid var(--dark); border-radius: 14px; padding: 14px 18px;
+      font-family: 'Zen Maru Gothic', sans-serif; font-size: 18px; font-weight: 700;
+      color: var(--dark); background: var(--bg); outline: none; transition: all .2s; margin-bottom: 18px;
+    }
+    input:focus { background: white; box-shadow: 0 0 0 4px rgba(255,107,157,.2); transform: translateY(-1px); }
+    input::placeholder { color: #ccc; font-weight: 500; }
+
+    .price-row { display: flex; gap: 10px; align-items: center; margin-bottom: 18px; }
+    .yen-badge { background: var(--mint); border: 2.5px solid var(--dark); border-radius: 12px; padding: 14px 16px; font-size: 18px; font-weight: 900; flex-shrink: 0; line-height: 1; }
+    .price-row input[type="number"] { margin-bottom: 0; flex: 1; }
+
+    .btn-start {
+      width: 100%; background: var(--pink); color: white;
+      border: 2.5px solid var(--dark); border-radius: 16px; padding: 18px;
+      font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 18px;
+      cursor: pointer; box-shadow: var(--shadow); transition: all .15s;
+      display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px;
+    }
+    .btn-start:hover { transform: translate(-2px,-2px); box-shadow: var(--shadow-lg); }
+    .btn-start:active { transform: translate(3px,3px); box-shadow: none; }
+
+    /* ── QUESTIONS ── */
+    .progress-wrap { margin-bottom: 24px; }
+    .progress-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .progress-label { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 13px; }
+    .progress-steps { display: flex; gap: 6px; }
+    .step-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--dark); background: var(--bg); transition: all .3s; }
+    .step-dot.done { background: var(--pink); }
+    .step-dot.active { background: var(--yellow); transform: scale(1.3); }
+    .progress-bar { height: 10px; background: var(--bg); border: 2px solid var(--dark); border-radius: 100px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--pink), var(--purple)); border-radius: 100px; transition: width .5s cubic-bezier(0.34,1.56,0.64,1); }
+
+    .q-item-chip { display: inline-flex; align-items: center; gap: 8px; background: var(--yellow); border: 2px solid var(--dark); border-radius: 100px; padding: 6px 14px; font-weight: 700; font-size: 14px; margin-bottom: 20px; box-shadow: var(--shadow-sm); }
+    .q-text { font-family: 'Nunito', sans-serif; font-weight: 900; font-size: clamp(20px,3.5vw,26px); line-height: 1.4; margin-bottom: 8px; }
+    .q-sub { font-size: 13px; color: #999; margin-bottom: 28px; line-height: 1.6; }
+
+    .q-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .opt-btn {
+      background: var(--white); border: 2.5px solid var(--dark); border-radius: 18px; padding: 18px 14px;
+      cursor: pointer; transition: all .15s; text-align: center; box-shadow: var(--shadow-sm);
+      position: relative; overflow: hidden;
+    }
+    .opt-btn::before { content: ''; position: absolute; inset: 0; background: var(--opt-color, var(--pink)); opacity: 0; transition: opacity .2s; }
+    .opt-btn:hover { transform: translate(-2px,-2px); box-shadow: var(--shadow); }
+    .opt-btn:hover::before { opacity: .1; }
+    .opt-btn.selected { transform: translate(-2px,-2px); box-shadow: var(--shadow); border-color: var(--opt-color,var(--pink)); }
+    .opt-btn.selected::before { opacity: .2; }
+    .opt-btn:active { transform: translate(2px,2px); box-shadow: none; }
+    .opt-btn:disabled { cursor: default; }
+    .opt-icon { font-size: 32px; margin-bottom: 8px; display: block; position: relative; z-index: 1; }
+    .opt-label { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 14px; display: block; margin-bottom: 4px; position: relative; z-index: 1; }
+    .opt-sub { font-size: 11px; color: #999; display: block; line-height: 1.4; position: relative; z-index: 1; }
+
+    /* AI Feedback bubble */
+    .feedback-bubble {
+      margin-top: 20px;
+      background: linear-gradient(135deg, #fff0f6, #f0f8ff);
+      border: 2.5px solid var(--dark);
+      border-radius: 18px;
+      padding: 14px 18px;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.6;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      min-height: 52px;
+    }
+
+    .feedback-bubble .fb-icon { font-size: 20px; flex-shrink: 0; }
+    .feedback-bubble .fb-text { flex: 1; }
+
+    .feedback-loading {
+      display: flex; gap: 5px; align-items: center;
+    }
+    .feedback-loading span {
+      width: 7px; height: 7px; border-radius: 50%; border: 2px solid var(--dark);
+      animation: bounce 0.9s ease-in-out infinite;
+    }
+    .feedback-loading span:nth-child(1) { background: var(--pink); }
+    .feedback-loading span:nth-child(2) { background: var(--yellow); animation-delay: .15s; }
+    .feedback-loading span:nth-child(3) { background: var(--mint); animation-delay: .3s; }
+
+    .btn-next {
+      width: 100%; background: var(--dark); color: white;
+      border: 2.5px solid var(--dark); border-radius: 14px; padding: 16px;
+      font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 16px;
+      cursor: pointer; box-shadow: var(--shadow-sm); transition: all .15s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 16px;
+    }
+    .btn-next:hover { transform: translate(-2px,-2px); box-shadow: var(--shadow); background: #444; }
+    .btn-next:active { transform: translate(2px,2px); box-shadow: none; }
+    .btn-next:disabled { opacity: 0.4; cursor: default; transform: none; box-shadow: var(--shadow-sm); }
+
+    /* ── LOADING ── */
+    .loading-card { text-align: center; padding: 60px 32px; }
+    .loading-blob {
+      width: 100px; height: 100px; margin: 0 auto 28px;
+      background: linear-gradient(135deg, var(--pink), var(--purple));
+      border-radius: 50%; border: 3px solid var(--dark);
+      display: flex; align-items: center; justify-content: center; font-size: 44px;
+      animation: blobPulse 1.2s ease-in-out infinite; box-shadow: var(--shadow);
+    }
+    @keyframes blobPulse {
+      0%,100% { transform: scale(1); border-radius: 50%; }
+      33% { transform: scale(1.08); border-radius: 40% 60% 55% 45%; }
+      66% { transform: scale(0.95); border-radius: 55% 45% 40% 60%; }
+    }
+    .loading-text { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 18px; margin-bottom: 8px; }
+    .loading-sub { font-size: 13px; color: #aaa; }
+    .loading-dots { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
+    .loading-dots span { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--dark); animation: bounce 1s ease-in-out infinite; }
+    .loading-dots span:nth-child(1) { background: var(--pink); }
+    .loading-dots span:nth-child(2) { background: var(--yellow); animation-delay: .15s; }
+    .loading-dots span:nth-child(3) { background: var(--mint); animation-delay: .3s; }
+
+    @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+    /* ── RESULT ── */
+    .result-header { text-align: center; margin-bottom: 28px; }
+    .result-emoji-wrap { position: relative; width: 120px; height: 120px; margin: 0 auto 16px; }
+    .result-circle {
+      width: 120px; height: 120px; border-radius: 50%; border: 4px solid var(--dark);
+      display: flex; align-items: center; justify-content: center; font-size: 52px;
+      box-shadow: var(--shadow-lg); animation: popIn 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    }
+    .result-circle.buy { background: linear-gradient(135deg, var(--green), var(--mint)); }
+    .result-circle.wait { background: linear-gradient(135deg, var(--yellow), var(--coral)); }
+    .result-circle.skip { background: linear-gradient(135deg, #FFB3C6, var(--pink)); }
+
+    .confetti-bits { position: absolute; top:-10px; left:-10px; right:-10px; bottom:-10px; pointer-events: none; }
+    .confetti-bit {
+      position: absolute; width: 8px; height: 8px; border-radius: 2px; border: 2px solid var(--dark);
+      animation: confettiFly 0.8s cubic-bezier(0.34,1.56,0.64,1) forwards;
+      animation-delay: var(--delay,0s); opacity: 0;
+    }
+    @keyframes confettiFly {
+      0%   { transform: translate(50%,50%) rotate(0deg) scale(0); opacity:1; }
+      100% { transform: translate(var(--tx),var(--ty)) rotate(var(--rot)) scale(1); opacity:0; }
+    }
+
+    .result-score-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--dark); color: white; padding: 6px 16px; border-radius: 100px;
+      font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 14px; margin-bottom: 12px;
+    }
+    .result-verdict { font-family: 'Nunito', sans-serif; font-weight: 900; font-size: clamp(28px,5vw,40px); line-height: 1.2; margin-bottom: 10px; }
+    .result-verdict.buy { color: #00a86b; }
+    .result-verdict.wait { color: #e67e00; }
+    .result-verdict.skip { color: var(--pink); }
+
+    .result-desc { font-size: 14px; color: #777; line-height: 1.8; margin-bottom: 24px; }
+
+    /* AI feedback timeline */
+    .timeline-title {
+      font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 13px;
+      text-transform: uppercase; letter-spacing: .08em; margin-bottom: 16px; color: #aaa;
+    }
+
+    .timeline { display: flex; flex-direction: column; gap: 0; margin-bottom: 24px; position: relative; }
+    .timeline::before {
+      content: ''; position: absolute; left: 18px; top: 0; bottom: 0;
+      width: 2px; background: repeating-linear-gradient(to bottom, var(--dark) 0, var(--dark) 4px, transparent 4px, transparent 8px);
+      opacity: 0.15;
+    }
+
+    .tl-item { display: flex; gap: 14px; align-items: flex-start; padding: 10px 0; }
+    .tl-dot {
+      width: 36px; height: 36px; border-radius: 50%; border: 2.5px solid var(--dark);
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
+      flex-shrink: 0; background: var(--white); box-shadow: var(--shadow-sm); z-index: 1;
+    }
+    .tl-dot.positive { background: #e8fdf2; }
+    .tl-dot.negative { background: #fff0f0; }
+    .tl-dot.neutral  { background: #fffde8; }
+
+    .tl-body { flex: 1; padding-top: 4px; }
+    .tl-q { font-size: 11px; color: #bbb; margin-bottom: 3px; }
+    .tl-a { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+    .tl-fb {
+      font-size: 13px; color: #555; line-height: 1.6;
+      background: var(--bg); border: 1.5px solid #eee; border-radius: 10px; padding: 8px 12px;
+    }
+
+    .btn-reset {
+      width: 100%; background: var(--yellow); color: var(--dark);
+      border: 2.5px solid var(--dark); border-radius: 16px; padding: 16px;
+      font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 16px;
+      cursor: pointer; box-shadow: var(--shadow); transition: all .15s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-reset:hover { transform: translate(-2px,-2px); box-shadow: var(--shadow-lg); }
+    .btn-reset:active { transform: translate(3px,3px); box-shadow: none; }
+
+    /* ── MODAL ── */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(45,45,45,.6); z-index: 200; align-items: flex-end; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--white); border: 3px solid var(--dark); border-radius: 28px 28px 0 0;
+      padding: 28px; width: 100%; max-width: 560px; max-height: 70vh; overflow-y: auto;
+      box-shadow: 0 -6px 0 var(--dark); animation: slideUp .35s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .modal-handle { width: 40px; height: 5px; background: var(--dark); border-radius: 100px; margin: 0 auto 20px; }
+    .modal-title { font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 20px; margin-bottom: 20px; }
+    .hist-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 2px dashed #eee; }
+    .hist-item:last-child { border-bottom: none; }
+    .hist-name { font-weight: 700; font-size: 15px; }
+    .hist-meta { font-size: 12px; color: #bbb; margin-top: 3px; }
+    .hist-badge { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 12px; padding: 5px 12px; border-radius: 100px; border: 2px solid var(--dark); white-space: nowrap; }
+    .hist-badge.buy { background: var(--green); }
+    .hist-badge.wait { background: var(--yellow); }
+    .hist-badge.skip { background: #FFB3C6; }
+    .empty-hist { text-align: center; color: #ccc; font-size: 14px; padding: 40px 0; }
+    .modal-close-btn { width: 100%; background: var(--bg); border: 2px solid var(--dark); border-radius: 12px; padding: 12px; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 14px; cursor: pointer; margin-top: 16px; transition: all .15s; }
+    .modal-close-btn:hover { background: var(--dark); color: white; }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-thumb { background: var(--pink); border-radius: 100px; }
+  </style>
+</head>
+<body>
+
+<div class="floaties" id="floaties"></div>
+
+<header class="header">
+  <div class="logo">
+    <span class="logo-badge">✨</span>
+    ときめきチェッカー
+  </div>
+  <button class="history-pill" onclick="openHistory()">📋 履歴</button>
+</header>
+
+<div id="app">
+
+  <!-- Screen 1: Input -->
+  <div class="screen active" id="screen-input">
+    <div class="card">
+      <div class="screen-title">欲しいもの、<br><span class="hl">本音で</span>チェック！🔍</div>
+      <p class="screen-subtitle">何が欲しいのか入力して、5つの質問に答えるだけ！</p>
+      <div class="field-label"><span class="dot"></span>欲しいもの</div>
+      <input type="text" id="item-name" placeholder="例：新しいスニーカー 👟" maxlength="40">
+      <div class="field-label"><span class="dot" style="background:var(--mint)"></span>お値段（省略OK）</div>
+      <div class="price-row">
+        <span class="yen-badge">¥</span>
+        <input type="number" id="item-price" placeholder="0" min="0">
+      </div>
+      <button class="btn-start" onclick="startCheck()">チェックスタート！ 🚀</button>
+    </div>
+  </div>
+
+  <!-- Screen 2: Questions -->
+  <div class="screen" id="screen-questions">
+    <div class="card">
+      <div class="progress-wrap">
+        <div class="progress-meta">
+          <span class="progress-label" id="q-number-label"></span>
+          <div class="progress-steps" id="step-dots"></div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
+      <div class="q-item-chip">🛍️ <span id="q-chip-name"></span></div>
+      <div class="q-text" id="q-text"></div>
+      <div class="q-sub" id="q-sub"></div>
+      <div class="q-options" id="q-options"></div>
+
+      <!-- AI feedback per question -->
+      <div class="feedback-bubble" id="feedback-bubble" style="display:none">
+        <span class="fb-icon">🤖</span>
+        <span class="fb-text" id="fb-text">
+          <span class="feedback-loading"><span></span><span></span><span></span></span>
+        </span>
+      </div>
+
+      <button class="btn-next" id="btn-next" onclick="nextQuestion()" disabled style="display:none">
+        次の質問へ →
+      </button>
+    </div>
+  </div>
+
+  <!-- Screen 3: Loading -->
+  <div class="screen" id="screen-loading">
+    <div class="card loading-card">
+      <div class="loading-blob">🔮</div>
+      <div class="loading-text">最終判定を生成中…！</div>
+      <div class="loading-sub">AIがあなたの回答を総合的に分析しています</div>
+      <div class="loading-dots"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+
+  <!-- Screen 4: Result -->
+  <div class="screen" id="screen-result">
+    <div class="card">
+      <div class="result-header">
+        <div class="result-emoji-wrap">
+          <div class="result-circle" id="result-circle"></div>
+          <div class="confetti-bits" id="confetti-container"></div>
+        </div>
+        <div class="result-score-badge" id="result-score"></div>
+        <div class="result-verdict" id="result-verdict"></div>
+        <p class="result-desc" id="result-desc"></p>
+      </div>
+      <div class="timeline-title">📝 質問ごとのフィードバック</div>
+      <div class="timeline" id="timeline"></div>
+      <button class="btn-reset" onclick="resetApp()">🔁 もう一度チェックする</button>
+    </div>
+  </div>
+</div>
+
+<!-- History Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📋 チェック履歴</div>
+    <div id="history-list"></div>
+    <button class="modal-close-btn" onclick="closeHistory()">閉じる</button>
+  </div>
+</div>
+
+<script>
+  // ── Floating deco ──────────────────────────────────
+  ['✨','💫','⭐','🌟','💖','🛍️','💸','🌈','🎀','💝','🌸','🍭'].forEach(em => {
+    const el = document.createElement('div');
+    el.className = 'floaty'; el.textContent = em;
+    el.style.cssText = `left:${Math.random()*90}%;top:${Math.random()*90}%;animation-duration:${6+Math.random()*8}s;animation-delay:${Math.random()*5}s;font-size:${18+Math.random()*18}px;`;
+    document.getElementById('floaties').appendChild(el);
+  });
+
+  // ── Questions ──────────────────────────────────────
+  const questions = [
+    {
+      text: "今この瞬間、本当に「ときめき」を感じている？💖",
+      sub: "心が躍る感覚か、なんとなく欲しいだけか？正直に！",
+      options: [
+        { icon:"✨", label:"超ときめく！",  sub:"見るたびにワクワク",    score:3,  color:'var(--pink)'   },
+        { icon:"😊", label:"まあ欲しい",    sub:"あったら嬉しい",        score:1,  color:'var(--blue)'   },
+        { icon:"🤔", label:"なんとなく",    sub:"流れで欲しくなった",    score:-1, color:'var(--yellow)' },
+        { icon:"😐", label:"あまり感じない",sub:"でも気になってる",       score:-2, color:'var(--purple)' }
+      ]
+    },
+    {
+      text: "1週間後も同じくらい欲しいと思う？⏰",
+      sub: "一時的な衝動か、ずっと欲しかったものか確認！",
+      options: [
+        { icon:"💯", label:"絶対欲しい！",  sub:"ずっと気になってた",    score:3,  color:'var(--mint)'   },
+        { icon:"🙂", label:"たぶん欲しい",  sub:"まだちょっと迷い中",    score:1,  color:'var(--blue)'   },
+        { icon:"😅", label:"わからない",    sub:"今が一番テンション高め",score:-1, color:'var(--yellow)' },
+        { icon:"🤷", label:"飽きてそう",    sub:"新鮮さが大事なタイプ",  score:-2, color:'var(--coral)'  }
+      ]
+    },
+    {
+      text: "買う一番の理由はなに？🤷",
+      sub: "正直なところ、最も近いものを選んでね",
+      options: [
+        { icon:"🔧", label:"本当に必要",    sub:"毎日使う・困ってる",    score:3,  color:'var(--mint)'   },
+        { icon:"🌟", label:"生活が豊かに",  sub:"QOL上がる確信あり",     score:2,  color:'var(--blue)'   },
+        { icon:"👁️", label:"人に見せたい",  sub:"承認欲求が正直ある",    score:-1, color:'var(--yellow)' },
+        { icon:"🛍️", label:"衝動・セール",  sub:"特にきっかけがない",    score:-2, color:'var(--coral)'  }
+      ]
+    },
+    {
+      text: "似たものや代替品、すでに持ってる？📦",
+      sub: "本当に不足しているものか、客観的に確認しよう",
+      options: [
+        { icon:"❌", label:"持ってない",    sub:"これが初めて",           score:2,  color:'var(--mint)'   },
+        { icon:"⚠️", label:"古くて限界",    sub:"買い替えが本当に必要",  score:2,  color:'var(--blue)'   },
+        { icon:"📦", label:"似たものある",  sub:"でも足りない理由がある",score:0,  color:'var(--yellow)' },
+        { icon:"🗄️", label:"十分持ってる",  sub:"まだ使えるものがある",  score:-3, color:'var(--coral)'  }
+      ]
+    },
+    {
+      text: "今、経済的に買う余裕はある？💰",
+      sub: "財布と心のバランスをチェック！",
+      options: [
+        { icon:"💰", label:"余裕あり！",    sub:"生活に全く影響なし",    score:3,  color:'var(--mint)'   },
+        { icon:"💳", label:"少し頑張れば",  sub:"節約すれば大丈夫",      score:1,  color:'var(--blue)'   },
+        { icon:"😬", label:"ちょっと厳しい",sub:"来月に回した方がいいかも",score:-2,color:'var(--yellow)'},
+        { icon:"🚨", label:"かなり厳しい",  sub:"貯金を崩す必要がある",  score:-3, color:'var(--coral)'  }
+      ]
+    }
+  ];
+
+  // ── State ──────────────────────────────────────────
+  let currentQ = 0, scores = [], feedbacks = [], answers = [];
+  let itemName = '', itemPrice = '';
+  let feedbackReady = false;
+  let history = [];
+  try { history = JSON.parse(localStorage.getItem('tokimeki_history') || '[]'); } catch(e) {}
+
+  // ── Screen management ──────────────────────────────
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    setTimeout(() => { const el = document.getElementById(id); if(el) el.classList.add('active'); }, 30);
+  }
+
+  // ── Start ──────────────────────────────────────────
+  function startCheck() {
+    itemName  = document.getElementById('item-name').value.trim() || 'この商品';
+    itemPrice = document.getElementById('item-price').value;
+    currentQ = 0; scores = []; feedbacks = []; answers = [];
+    showScreen('screen-questions');
+    renderQ();
+  }
+
+  // ── Render question ────────────────────────────────
+  function renderQ() {
+    feedbackReady = false;
+    const q = questions[currentQ];
+    const total = questions.length;
+
+    document.getElementById('progress-fill').style.width = (currentQ / total * 100) + '%';
+    document.getElementById('q-number-label').textContent = `質問 ${currentQ + 1} / ${total}`;
+    document.getElementById('q-chip-name').textContent = itemName;
+    document.getElementById('q-text').textContent = q.text;
+    document.getElementById('q-sub').textContent = q.sub;
+
+    // Step dots
+    const dotsEl = document.getElementById('step-dots');
+    dotsEl.innerHTML = '';
+    for (let i = 0; i < total; i++) {
+      const d = document.createElement('div');
+      d.className = 'step-dot' + (i < currentQ ? ' done' : i === currentQ ? ' active' : '');
+      dotsEl.appendChild(d);
+    }
+
+    // Options
+    const optsEl = document.getElementById('q-options');
+    optsEl.innerHTML = '';
+    q.options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.style.setProperty('--opt-color', opt.color);
+      btn.innerHTML = `<span class="opt-icon">${opt.icon}</span><span class="opt-label">${opt.label}</span><span class="opt-sub">${opt.sub}</span>`;
+      btn.onclick = () => pickAnswer(opt, btn);
+      optsEl.appendChild(btn);
+    });
+
+    // Hide feedback + next button
+    document.getElementById('feedback-bubble').style.display = 'none';
+    const btnNext = document.getElementById('btn-next');
+    btnNext.style.display = 'none';
+    btnNext.disabled = true;
+    btnNext.textContent = currentQ < questions.length - 1 ? '次の質問へ →' : '結果を見る 🎉';
+  }
+
+  // ── Pick answer ────────────────────────────────────
+  async function pickAnswer(opt, btn) {
+    // Disable all buttons
+    document.querySelectorAll('.opt-btn').forEach(b => { b.disabled = true; b.classList.remove('selected'); });
+    btn.classList.add('selected');
+
+    scores.push(opt.score);
+    answers.push({ q: questions[currentQ].text, a: opt.label, score: opt.score });
+
+    // Show feedback bubble loading
+    const bubble = document.getElementById('feedback-bubble');
+    const fbText = document.getElementById('fb-text');
+    bubble.style.display = 'flex';
+    fbText.innerHTML = '<span class="feedback-loading"><span></span><span></span><span></span></span>';
+
+    // Fetch AI feedback
+    fetchFeedback(opt).then(text => {
+      feedbacks.push(text);
+      fbText.textContent = text;
+      feedbackReady = true;
+      const btnNext = document.getElementById('btn-next');
+      btnNext.disabled = false;
+    }).catch(() => {
+      const fallback = opt.score >= 2 ? '✅ 良いサインです！' : opt.score <= -2 ? '⚠️ 少し立ち止まって考えてみましょう' : '📊 バランスが大切ですね';
+      feedbacks.push(fallback);
+      fbText.textContent = fallback;
+      feedbackReady = true;
+      document.getElementById('btn-next').disabled = false;
+    });
+
+    // Show next button
+    document.getElementById('btn-next').style.display = 'flex';
+  }
+
+  // ── Fetch feedback from Vercel Function ────────────
+  async function fetchFeedback(opt) {
+    const res = await fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        itemName,
+        itemPrice,
+        questionText: questions[currentQ].text,
+        answerText: opt.label,
+        answerScore: opt.score,
+        questionIndex: currentQ
+      })
+    });
+    if (!res.ok) throw new Error('API error');
+    const data = await res.json();
+    return data.feedback;
+  }
+
+  // ── Next question ──────────────────────────────────
+  function nextQuestion() {
+    currentQ++;
+    if (currentQ >= questions.length) {
+      showScreen('screen-loading');
+      setTimeout(showResult, 1200);
+    } else {
+      renderQ();
+    }
+  }
+
+  // ── Show result ────────────────────────────────────
+  function showResult() {
+    const total = scores.reduce((a, b) => a + b, 0);
+    const pct = Math.max(0, Math.min(1, (total - (-11)) / (14 - (-11))));
+    const scorePct = Math.round(pct * 100);
+
+    let type, emoji, verdict, desc;
+
+    if (pct >= 0.65) {
+      type = 'buy'; emoji = '🛒'; verdict = '買っちゃおう！';
+      desc = `「${itemName}」はあなたにとって価値あるもの。本物のときめきと必要性が感じられます。後悔しない買い物になりそうです！`;
+    } else if (pct >= 0.38) {
+      type = 'wait'; emoji = '⏳'; verdict = 'もう少し待って';
+      desc = `「${itemName}」への気持ちは半々。1週間ほど待って、それでも欲しければ買いましょう。時間が最良の判断者です。`;
+    } else {
+      type = 'skip'; emoji = '🌊'; verdict = '今回は見送ろう';
+      desc = `今の「${itemName}」への欲求は一時的かも。節約した分を本当に大切なものへ使いましょう！`;
+    }
+
+    const circle = document.getElementById('result-circle');
+    circle.className = `result-circle ${type}`;
+    circle.textContent = emoji;
+    if (type === 'buy') spawnConfetti();
+
+    document.getElementById('result-score').textContent = `⭐ スコア ${scorePct}点 / 100点`;
+    const vEl = document.getElementById('result-verdict');
+    vEl.className = `result-verdict ${type}`;
+    vEl.textContent = verdict;
+    document.getElementById('result-desc').textContent = desc;
+
+    // Build timeline
+    const qLabels = ['ときめき','継続性','購入動機','代替品','経済的余裕'];
+    const tlEl = document.getElementById('timeline');
+    tlEl.innerHTML = answers.map((a, i) => {
+      const cls = a.score >= 2 ? 'positive' : a.score <= -2 ? 'negative' : 'neutral';
+      const dotIcon = a.score >= 2 ? '✅' : a.score <= -2 ? '⚠️' : '📊';
+      return `
+        <div class="tl-item">
+          <div class="tl-dot ${cls}">${dotIcon}</div>
+          <div class="tl-body">
+            <div class="tl-q">${qLabels[i]}</div>
+            <div class="tl-a">「${a.a}」を選択</div>
+            <div class="tl-fb">${feedbacks[i] || ''}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    // Save history
+    history.unshift({ name: itemName, price: parseFloat(itemPrice)||0, type, verdict, score: scorePct, date: new Date().toLocaleDateString('ja-JP', { month:'short', day:'numeric' }) });
+    if (history.length > 20) history.pop();
+    try { localStorage.setItem('tokimeki_history', JSON.stringify(history)); } catch(e) {}
+
+    showScreen('screen-result');
+  }
+
+  // ── Confetti ───────────────────────────────────────
+  function spawnConfetti() {
+    const c = document.getElementById('confetti-container');
+    c.innerHTML = '';
+    const colors = ['var(--pink)','var(--yellow)','var(--mint)','var(--purple)','var(--blue)'];
+    for (let i = 0; i < 12; i++) {
+      const bit = document.createElement('div');
+      const angle = (i / 12) * 360;
+      const dist = 50 + Math.random() * 30;
+      bit.className = 'confetti-bit';
+      bit.style.cssText = `background:${colors[i%colors.length]};--tx:${Math.cos(angle*Math.PI/180)*dist}px;--ty:${Math.sin(angle*Math.PI/180)*dist}px;--rot:${Math.random()*360}deg;--delay:${Math.random()*.3}s;top:50%;left:50%;`;
+      c.appendChild(bit);
+    }
+  }
+
+  // ── Reset ──────────────────────────────────────────
+  function resetApp() {
+    document.getElementById('item-name').value = '';
+    document.getElementById('item-price').value = '';
+    showScreen('screen-input');
+  }
+
+  // ── History ────────────────────────────────────────
+  function openHistory() {
+    const list = document.getElementById('history-list');
+    list.innerHTML = !history.length
+      ? '<div class="empty-hist">😊 まだ履歴がありません</div>'
+      : history.map(h => `<div class="hist-item"><div><div class="hist-name">${h.name}</div><div class="hist-meta">${h.date}${h.price ? ' · ¥'+h.price.toLocaleString() : ''} · ${h.score}点</div></div><span class="hist-badge ${h.type}">${h.verdict}</span></div>`).join('');
+    document.getElementById('modal-overlay').classList.add('open');
+  }
+  function closeHistory() { document.getElementById('modal-overlay').classList.remove('open'); }
+  function handleOverlayClick(e) { if(e.target === document.getElementById('modal-overlay')) closeHistory(); }
+
+  document.getElementById('item-name').addEventListener('keydown', e => { if(e.key==='Enter') startCheck(); });
+</script>
+</body>
+</html>
