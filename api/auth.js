@@ -1,63 +1,38 @@
 // api/auth.js
-// Google OAuth 2.0 flow + session via signed cookie (Upstash Redis)
+// Google OAuth 2.0 認証フロー
+// ログイン・コールバック・ログアウト・セッション確認の4アクションを処理する
+
 import { redis } from './lib/redis.js';
-import { serialize, parse } from 'cookie';
+import { parse } from 'cookie';
 import crypto from 'crypto';
+import {
+  COOKIE_NAME,
+  SESSION_TTL,
+  unsign,
+  sessionCookie,
+  getUser,
+} from './lib/session.js';
 
 const {
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
-  BASE_URL,           // e.g. https://your-app.vercel.app
-  COOKIE_SECRET,      // random 32+ char string, set in Vercel env vars
+  BASE_URL, // 例: https://your-app.vercel.app
 } = process.env;
 
-const REDIRECT_URI  = `${BASE_URL}/api/auth?action=callback`;
-const COOKIE_NAME   = 'tkm_session';
-const SESSION_TTL   = 60 * 60 * 24 * 7; // 7 days (seconds)
+// Google に登録したリダイレクト URI（末尾のクエリも含めて完全一致が必要）
+const REDIRECT_URI = `${BASE_URL}/api/auth?action=callback`;
 
-// ── Helpers ──────────────────────────────────────────────────────────────
-function sign(value) {
-  return value + '.' + crypto.createHmac('sha256', COOKIE_SECRET).update(value).digest('base64url');
-}
-
-function unsign(signed) {
-  const idx = signed.lastIndexOf('.');
-  if (idx === -1) return null;
-  const value = signed.slice(0, idx);
-  if (sign(value) !== signed) return null;
-  return value;
-}
-
-function sessionCookie(sessionId, maxAge = SESSION_TTL) {
-  return serialize(COOKIE_NAME, sign(sessionId), {
-    httpOnly: true,
-    secure:   true,
-    sameSite: 'lax',
-    path:     '/',
-    maxAge,
-  });
-}
-
-// ── Handler ───────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   const { action } = req.query;
 
-  // ── GET /api/auth  → return current user or 401 ──
+  // GET /api/auth → ログイン中のユーザー情報を返す（未認証なら 401）
   if (req.method === 'GET' && !action) {
-    const cookies   = parse(req.headers.cookie || '');
-    const signed    = cookies[COOKIE_NAME];
-    if (!signed) return res.status(401).json({ error: 'not authenticated' });
-
-    const sessionId = unsign(signed);
-    if (!sessionId) return res.status(401).json({ error: 'invalid session' });
-
-    const user = await redis.get(`session:${sessionId}`);
-    if (!user)  return res.status(401).json({ error: 'session expired' });
-
+    const user = await getUser(req);
+    if (!user) return res.status(401).json({ error: 'not authenticated' });
     return res.status(200).json(user);
   }
 
-  // ── GET /api/auth?action=login  → redirect to Google ──
+  // GET /api/auth?action=login → Google 認証画面へリダイレクト
   if (action === 'login') {
     const params = new URLSearchParams({
       client_id:     GOOGLE_CLIENT_ID,
@@ -70,12 +45,12 @@ export default async function handler(req, res) {
     return res.redirect(302, `https://accounts.google.com/o/oauth2/v2/auth?${params}`);
   }
 
-  // ── GET /api/auth?action=callback  → exchange code, set session ──
+  // GET /api/auth?action=callback → 認可コードをトークンに交換してセッションを保存
   if (action === 'callback') {
     const { code, error } = req.query;
     if (error || !code) return res.redirect(302, '/?error=oauth_denied');
 
-    // Exchange code for tokens
+    // 認可コードをアクセストークンに交換
     const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -90,15 +65,17 @@ export default async function handler(req, res) {
     const tokens = await tokenRes.json();
     if (!tokenRes.ok) return res.redirect(302, '/?error=token_exchange');
 
-    // Fetch user info
+    // アクセストークンでユーザー情報を取得
     const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
       headers: { Authorization: `Bearer ${tokens.access_token}` },
     });
     const profile = await userRes.json();
 
-    // Whitelist check
+    // ALLOWED_EMAILS が設定されている場合はホワイトリスト照合（空なら全員許可）
     const ALLOWED = (process.env.ALLOWED_EMAILS || '')
-      .split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
     if (ALLOWED.length > 0 && !ALLOWED.includes(profile.email.toLowerCase())) {
       return res.redirect(302, '/?error=unauthorized');
     }
@@ -110,12 +87,12 @@ export default async function handler(req, res) {
       picture: profile.picture,
     };
 
-    // Store session in Redis
+    // セッションを Redis に保存して署名付きクッキーをセット
     const sessionId = crypto.randomUUID();
     try {
       await redis.set(`session:${sessionId}`, user, { ex: SESSION_TTL });
     } catch (err) {
-      console.error('Redis session write failed:', err);
+      console.error('Redis セッション書き込み失敗:', err);
       return res.redirect(302, '/?error=session_failed');
     }
 
@@ -123,10 +100,10 @@ export default async function handler(req, res) {
     return res.redirect(302, '/');
   }
 
-  // ── GET /api/auth?action=logout ──
+  // GET /api/auth?action=logout → Redis のセッションを削除してクッキーを無効化
   if (action === 'logout') {
-    const cookies   = parse(req.headers.cookie || '');
-    const signed    = cookies[COOKIE_NAME];
+    const cookies = parse(req.headers.cookie || '');
+    const signed = cookies[COOKIE_NAME];
     const sessionId = signed ? unsign(signed) : null;
     if (sessionId) await redis.del(`session:${sessionId}`);
 

@@ -1,31 +1,12 @@
 // api/savings.js
-// 節約額の集計・月別内訳・リセット専用エンドポイント
+// 累計節約額・月別内訳の取得、および節約額リセットエンドポイント
+
 import { redis } from './lib/redis.js';
-import { parse } from 'cookie';
-import crypto from 'crypto';
+import { getUser } from './lib/session.js';
 
-const COOKIE_NAME   = 'tkm_session';
-const COOKIE_SECRET = process.env.COOKIE_SECRET;
-
-function unsign(signed) {
-  const idx = signed.lastIndexOf('.');
-  if (idx === -1) return null;
-  const value = signed.slice(0, idx);
-  const expected = value + '.' + crypto
-    .createHmac('sha256', COOKIE_SECRET)
-    .update(value)
-    .digest('base64url');
-  if (expected !== signed) return null;
-  return value;
-}
-
-async function getUser(req) {
-  const cookies   = parse(req.headers.cookie || '');
-  const signed    = cookies[COOKIE_NAME];
-  if (!signed) return null;
-  const sessionId = unsign(signed);
-  if (!sessionId) return null;
-  return redis.get(`session:${sessionId}`);
+// Upstash は値を文字列で返す場合があるためパースして統一する
+function parseRecord(raw) {
+  return typeof raw === 'string' ? JSON.parse(raw) : raw;
 }
 
 export default async function handler(req, res) {
@@ -34,45 +15,41 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  // 認証チェック
   const user = await getUser(req);
   if (!user) return res.status(401).json({ error: 'not authenticated' });
 
   const historyKey = `history:${user.id}`;
   const savingsKey = `savings:${user.id}`;
 
-  // ── GET /api/savings
-  // 累計節約額 + 月別内訳を返す
+  // GET /api/savings → 累計節約額・月別内訳・節約レコード一覧を返す
   if (req.method === 'GET') {
     const [rawHistory, totalSaved] = await Promise.all([
       redis.lrange(historyKey, 0, 99),
       redis.get(savingsKey),
     ]);
 
-    const history = (rawHistory || []).map(h =>
-      typeof h === 'string' ? JSON.parse(h) : h
-    );
+    const history = (rawHistory || []).map(parseRecord);
 
-    // 月別集計
+    // 節約レコード（saved: true かつ価格あり）を月別に集計する
     const byMonth = {};
     history
-      .filter(h => h.saved && h.itemPrice > 0)
-      .forEach(h => {
-        // createdAt があればそれを使い、なければ date 文字列から推測
-        const d = h.createdAt
-          ? new Date(h.createdAt)
-          : new Date();                       // fallback
+      .filter((h) => h.saved && h.itemPrice > 0)
+      .forEach((h) => {
+        // createdAt があればそれを使い、なければ現在日時でフォールバック
+        const d = h.createdAt ? new Date(h.createdAt) : new Date();
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
         byMonth[key] = (byMonth[key] || 0) + Number(h.itemPrice);
       });
 
-    // 月別を新しい順にソート
+    // 月別を新しい順にソートして配列化
     const monthly = Object.entries(byMonth)
       .sort(([a], [b]) => b.localeCompare(a))
       .map(([month, amount]) => ({ month, amount }));
 
-    // 節約レコードのみ抽出（最新20件）
+    // 節約レコードを最新20件に絞る
     const savedItems = history
-      .filter(h => h.saved && h.itemPrice > 0)
+      .filter((h) => h.saved && h.itemPrice > 0)
       .slice(0, 20);
 
     return res.status(200).json({
@@ -82,8 +59,7 @@ export default async function handler(req, res) {
     });
   }
 
-  // ── DELETE /api/savings
-  // 節約額のみリセット（履歴は残す）
+  // DELETE /api/savings → 節約額をリセット（履歴は保持）
   if (req.method === 'DELETE') {
     await redis.set(savingsKey, 0);
     return res.status(200).json({ ok: true, message: '節約額をリセットしました' });

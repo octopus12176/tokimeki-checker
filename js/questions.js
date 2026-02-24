@@ -1,4 +1,7 @@
 // js/questions.js
+// 購買チェックの6つの質問データ
+// 各質問は theme / themeLabel / themeColor / text / sub / options で構成される
+// options の score は最終スコア計算に使用する（+3 〜 -3）
 const QUESTIONS = [
   {
     theme: 'tokimeki',

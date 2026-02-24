@@ -1,44 +1,16 @@
 // api/feedback.js
-import { redis } from './lib/redis.js';
-import { parse } from 'cookie';
-import crypto from 'crypto';
+// 各質問への回答に対する AI フィードバックを生成するエンドポイント
 
-const COOKIE_NAME = 'tkm_session';
-const COOKIE_SECRET = process.env.COOKIE_SECRET;
+import { getUser } from './lib/session.js';
 
-function unsign(signed) {
-  const idx = signed.lastIndexOf('.');
-  if (idx === -1) return null;
-  const value = signed.slice(0, idx);
-  const expected =
-    value +
-    '.' +
-    crypto
-      .createHmac('sha256', COOKIE_SECRET)
-      .update(value)
-      .digest('base64url');
-  if (expected !== signed) return null;
-  return value;
-}
-
-async function getUser(req) {
-  const cookies = parse(req.headers.cookie || '');
-  const signed = cookies[COOKIE_NAME];
-  if (!signed) return null;
-  const sessionId = unsign(signed);
-  if (!sessionId) return null;
-  return redis.get(`session:${sessionId}`);
-}
-
+// テーマ別のフィードバック生成指示（OpenAI プロンプトに埋め込む）
 const THEME_INSTRUCTIONS = {
-  tokimeki: 'ときめきや感情的な価値について共感を込めてコメントしてください。',
-  mise: '見栄や承認欲求について、批判せず優しく本音に気づかせるコメントをしてください。',
-  hitsuyou: '必要性や購入目的の明確さについてコメントしてください。',
-  tsukauka: '実際に使い続けるかどうかの現実的な視点でコメントしてください。',
-  daigae:
-    '代替手段（図書館・中古・サブスクなど）の可能性を踏まえてコメントしてください。',
-  shihonshugi:
-    '消費文化・広告・資本主義への批判的視点を持ちながら、押しつけがましくなくコメントしてください。',
+  tokimeki:    'ときめきや感情的な価値について共感を込めてコメントしてください。',
+  mise:        '見栄や承認欲求について、批判せず優しく本音に気づかせるコメントをしてください。',
+  hitsuyou:   '必要性や購入目的の明確さについてコメントしてください。',
+  tsukauka:   '実際に使い続けるかどうかの現実的な視点でコメントしてください。',
+  daigae:     '代替手段（図書館・中古・サブスクなど）の可能性を踏まえてコメントしてください。',
+  shihonshugi: '消費文化・広告・資本主義への批判的視点を持ちながら、押しつけがましくなくコメントしてください。',
 };
 
 export default async function handler(req, res) {
@@ -46,10 +18,9 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST')
-    return res.status(405).json({ error: 'method not allowed' });
+  if (req.method !== 'POST') return res.status(405).json({ error: 'method not allowed' });
 
-  // Auth guard
+  // 認証チェック
   const user = await getUser(req);
   if (!user) return res.status(401).json({ error: 'not authenticated' });
 
@@ -62,21 +33,20 @@ export default async function handler(req, res) {
     questionIndex,
     questionTheme,
   } = req.body;
+
   if (!itemName || !questionText || !answerText) {
     return res.status(400).json({ error: 'missing required fields' });
   }
 
-  const priceText = itemPrice
-    ? `（価格：¥${Number(itemPrice).toLocaleString()}）`
-    : '';
+  // スコアを人間が読みやすいラベルに変換
   const scoreLabel =
-    answerScore >= 2
-      ? 'ポジティブな回答'
-      : answerScore <= -2
-      ? 'ネガティブな回答'
-      : '中立的な回答';
+    answerScore >= 2  ? 'ポジティブな回答' :
+    answerScore <= -2 ? 'ネガティブな回答' : '中立的な回答';
+
+  const priceText  = itemPrice ? `（価格：¥${Number(itemPrice).toLocaleString()}）` : '';
   const themeGuide = THEME_INSTRUCTIONS[questionTheme] || '';
 
+  // OpenAI に送るプロンプトを組み立て
   const prompt = `あなたは批評眼のある節約アドバイザーです。ユーザーが「${itemName}${priceText}」の購入を検討しています。
 
 質問テーマ：${questionTheme}
@@ -103,16 +73,16 @@ ${themeGuide}
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-nano',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 100,
+        model:       'gpt-4.1-nano',
+        messages:    [{ role: 'user', content: prompt }],
+        max_tokens:  100,
         temperature: 0.75,
       }),
     });
 
     if (!response.ok) {
       const err = await response.json();
-      console.error('OpenAI error:', err);
+      console.error('OpenAI エラー:', err);
       return res.status(502).json({ error: 'OpenAI API error' });
     }
 
@@ -120,7 +90,7 @@ ${themeGuide}
     const feedback = data.choices[0].message.content.trim();
     return res.status(200).json({ feedback });
   } catch (err) {
-    console.error('Server error:', err);
+    console.error('サーバーエラー:', err);
     return res.status(500).json({ error: 'internal server error' });
   }
 }
