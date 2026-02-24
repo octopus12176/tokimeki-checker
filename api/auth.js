@@ -103,9 +103,14 @@ export default async function handler(req, res) {
       picture: profile.picture,
     };
 
-    // Store session in KV
+    // Store session in Redis
     const sessionId = crypto.randomUUID();
-    await redis.set(`session:${sessionId}`, user, { ex: SESSION_TTL });
+    try {
+      await redis.set(`session:${sessionId}`, user, { ex: SESSION_TTL });
+    } catch (err) {
+      console.error('Redis session write failed:', err);
+      return res.redirect(302, '/?error=session_failed');
+    }
 
     res.setHeader('Set-Cookie', sessionCookie(sessionId));
     return res.redirect(302, '/');

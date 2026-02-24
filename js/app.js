@@ -81,6 +81,7 @@ const App = (() => {
 
   // ── Question flow ────────────────────────────────────────────────────────
   function startCheck() {
+    if (!state.user) { UI.showScreen('screen-login'); return; }
     state.itemName =
       document.getElementById('item-name').value.trim() || 'この商品';
     state.itemPrice = document.getElementById('item-price').value;
@@ -289,6 +290,7 @@ const App = (() => {
 
   // ── Savings screen ───────────────────────────────────────────────────────
   async function showSavings() {
+    if (!state.user) { UI.showScreen('screen-login'); return; }
     try {
       const res = await fetch('/api/savings');
       if (!res.ok) throw new Error('savings fetch failed');
@@ -304,6 +306,7 @@ const App = (() => {
 
   // ── History modal ────────────────────────────────────────────────────────
   async function openHistory() {
+    if (!state.user) { UI.showScreen('screen-login'); return; }
     await loadHistory();
     UI.renderHistory(state.history);
     document.getElementById('modal-overlay').classList.add('open');
@@ -344,6 +347,7 @@ const App = (() => {
     }
 
     state.user = user;
+    document.getElementById('header-right').style.display = '';
     document.getElementById('user-name').textContent = user.name;
     document.getElementById('user-picture').src = user.picture || '';
     document.getElementById('user-picture').style.display = user.picture
