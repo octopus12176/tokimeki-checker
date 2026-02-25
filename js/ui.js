@@ -153,6 +153,13 @@ const UI = {
       return;
     }
 
+    // 全件削除ボタンを上部に追加
+    const deleteAllBtn = document.createElement('button');
+    deleteAllBtn.className = 'delete-all-btn';
+    deleteAllBtn.textContent = '🗑️ 全件削除';
+    deleteAllBtn.onclick = () => App.deleteAllHistory();
+    el.appendChild(deleteAllBtn);
+
     history.forEach((h) => {
       const item = document.createElement('div');
       item.className = 'hist-item';
@@ -197,6 +204,15 @@ const UI = {
         actions.appendChild(skippedBtn);
       }
 
+      // 削除ボタンを追加
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-btn';
+      deleteBtn.textContent = '🗑️';
+      deleteBtn.dataset.historyId = h.id;
+      deleteBtn.dataset.itemName = h.itemName;
+      deleteBtn.title = '削除';
+      actions.appendChild(deleteBtn);
+
       const badge = document.createElement('span');
       badge.className = `hist-badge ${h.type}`;
       badge.textContent = h.verdict;
@@ -213,6 +229,10 @@ const UI = {
         const historyId = e.target.dataset.historyId;
         const isBought = e.target.dataset.isBought === 'true';
         App.updateHistoryDecision(historyId, isBought);
+      } else if (e.target.classList.contains('delete-btn')) {
+        const historyId = e.target.dataset.historyId;
+        const itemName = e.target.dataset.itemName;
+        App.deleteHistoryRecord(historyId, itemName);
       }
     });
   },

@@ -385,6 +385,80 @@ const App = (() => {
     if (e.target === document.getElementById('modal-overlay')) closeHistory();
   }
 
+  // ── 削除確認ダイアログ ───────────────────────────────────────────────────────
+
+  // 確認ダイアログを表示して、OK時にコールバックを実行する
+  function showConfirm(message, onOk) {
+    const overlay = document.getElementById('confirm-overlay');
+    const msgEl = document.getElementById('confirm-message');
+    const okBtn = document.getElementById('confirm-ok-btn');
+    const cancelBtn = document.getElementById('confirm-cancel-btn');
+
+    if (!overlay || !msgEl || !okBtn || !cancelBtn) return;
+
+    msgEl.textContent = message;
+    overlay.classList.remove('hidden');
+
+    // キャンセルボタン
+    cancelBtn.onclick = () => hideConfirm();
+
+    // OKボタン
+    okBtn.onclick = async () => {
+      hideConfirm();
+      await onOk();
+    };
+  }
+
+  // 確認ダイアログを非表示にする
+  function hideConfirm() {
+    const overlay = document.getElementById('confirm-overlay');
+    if (overlay) overlay.classList.add('hidden');
+  }
+
+  // 個別削除：指定ID のレコードを削除
+  async function deleteHistoryRecord(id, itemName) {
+    showConfirm(`「${itemName}」を削除しますか？`, async () => {
+      try {
+        const res = await fetch(`/api/history?id=${id}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (!res.ok) {
+          showToast('削除に失敗しました');
+          return;
+        }
+        await loadHistory();
+        UI.renderHistory(state.history);
+        showToast('削除しました');
+      } catch (e) {
+        console.error('deleteHistoryRecord:', e);
+        showToast('削除に失敗しました');
+      }
+    });
+  }
+
+  // 全削除：全履歴を削除
+  async function deleteAllHistory() {
+    showConfirm('すべての履歴を削除しますか？', async () => {
+      try {
+        const res = await fetch('/api/history', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (!res.ok) {
+          showToast('削除に失敗しました');
+          return;
+        }
+        await loadHistory();
+        UI.renderHistory(state.history);
+        showToast('全履歴を削除しました');
+      } catch (e) {
+        console.error('deleteAllHistory:', e);
+        showToast('削除に失敗しました');
+      }
+    });
+  }
+
   // ── トースト通知 ─────────────────────────────────────────────────────────────
 
   function showToast(msg) {
@@ -450,6 +524,9 @@ const App = (() => {
     handleOverlayClick,
     resetApp,
     updateHistoryDecision,
+    deleteHistoryRecord,
+    deleteAllHistory,
+    hideConfirm,
   };
 })();
 

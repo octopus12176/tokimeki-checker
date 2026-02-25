@@ -37,7 +37,7 @@ async function findRecordById(historyKey, recordId) {
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -99,6 +99,37 @@ export default async function handler(req, res) {
     }
 
     return res.status(200).json({ ok: true, record });
+  }
+
+  // DELETE /api/history → 履歴レコードを削除する
+  // ?id=xxx がある場合は指定IDのレコードのみ削除、ない場合は全履歴を削除
+  if (req.method === 'DELETE') {
+    const { id } = req.query;
+
+    if (id) {
+      // 個別削除：指定 ID のレコードを削除
+      const result = await findRecordById(historyKey, id);
+      if (!result) return res.status(404).json({ error: 'レコードが見つかりません' });
+
+      // 全件取得して対象以外を再構築
+      const rawList = await redis.lrange(historyKey, 0, -1);
+      const filteredList = rawList.filter((item) => {
+        const record = parseRecord(item);
+        return record.id !== id;
+      });
+
+      // 削除して再度 rpush で再構築
+      await redis.del(historyKey);
+      if (filteredList.length > 0) {
+        await redis.rpush(historyKey, ...filteredList);
+      }
+
+      return res.status(200).json({ ok: true, message: 'レコードを削除しました' });
+    } else {
+      // 全削除：全履歴を削除
+      await redis.del(historyKey);
+      return res.status(200).json({ ok: true, message: '全履歴を削除しました' });
+    }
   }
 
   return res.status(405).json({ error: 'method not allowed' });
