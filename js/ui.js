@@ -54,6 +54,7 @@ const UI = {
 
   // 「買う」判定のときに結果アイコン周りにコンフェティを飛ばす
   spawnConfetti() {
+    const CONFETTI_COUNT = 12;
     const c = document.getElementById('confetti-container');
     if (!c) return;
     c.innerHTML = '';
@@ -64,9 +65,9 @@ const UI = {
       'var(--purple)',
       'var(--blue)',
     ];
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < CONFETTI_COUNT; i++) {
       const bit   = document.createElement('div');
-      const angle = (i / 12) * 360;
+      const angle = (i / CONFETTI_COUNT) * 360;
       const dist  = 50 + Math.random() * 30;
       bit.className = 'confetti-bit';
       bit.style.cssText = [
@@ -86,35 +87,55 @@ const UI = {
   renderTimeline(answers, feedbacks) {
     const el = document.getElementById('timeline');
     if (!el) return;
-    el.innerHTML = answers
-      .map((a, i) => {
-        const isActivism = a.theme === 'shihonshugi';
-        // スコアに応じてドットの色クラスを決定する
-        const cls = isActivism
-          ? 'activism'
-          : a.score >= 2
-          ? 'positive'
-          : a.score <= -2
-          ? 'negative'
-          : 'neutral';
-        const icon = isActivism
-          ? '🌍'
-          : a.score >= 2
-          ? '✅'
-          : a.score <= -2
-          ? '⚠️'
-          : '📊';
-        return `
-        <div class="tl-item">
-          <div class="tl-dot ${cls}">${icon}</div>
-          <div class="tl-body">
-            <div class="tl-q">${a.themeLabel}</div>
-            <div class="tl-a">「${a.a}」を選択</div>
-            <div class="tl-fb">${feedbacks[i] || '—'}</div>
-          </div>
-        </div>`;
-      })
-      .join('');
+    el.innerHTML = '';
+
+    answers.forEach((a, i) => {
+      const isActivism = a.theme === 'shihonshugi';
+      const cls = isActivism
+        ? 'activism'
+        : a.score >= 2
+        ? 'positive'
+        : a.score <= -2
+        ? 'negative'
+        : 'neutral';
+      const icon = isActivism
+        ? '🌍'
+        : a.score >= 2
+        ? '✅'
+        : a.score <= -2
+        ? '⚠️'
+        : '📊';
+
+      const item = document.createElement('div');
+      item.className = 'tl-item';
+
+      const dot = document.createElement('div');
+      dot.className = `tl-dot ${cls}`;
+      dot.textContent = icon;
+
+      const body = document.createElement('div');
+      body.className = 'tl-body';
+
+      const q = document.createElement('div');
+      q.className = 'tl-q';
+      q.textContent = a.themeLabel;
+
+      const ans = document.createElement('div');
+      ans.className = 'tl-a';
+      ans.textContent = `「${a.a}」を選択`;
+
+      const fb = document.createElement('div');
+      fb.className = 'tl-fb';
+      fb.textContent = feedbacks[i] || '—';
+
+      body.appendChild(q);
+      body.appendChild(ans);
+      body.appendChild(fb);
+
+      item.appendChild(dot);
+      item.appendChild(body);
+      el.appendChild(item);
+    });
   },
 
   // 履歴モーダルの一覧を描画する
@@ -122,36 +143,78 @@ const UI = {
   renderHistory(history) {
     const el = document.getElementById('history-list');
     if (!el) return;
+    el.innerHTML = '';
+
     if (!history.length) {
-      el.innerHTML = '<div class="empty-hist">😊 まだ履歴がありません</div>';
+      const emptyDiv = document.createElement('div');
+      emptyDiv.className = 'empty-hist';
+      emptyDiv.textContent = '😊 まだ履歴がありません';
+      el.appendChild(emptyDiv);
       return;
     }
-    el.innerHTML = history
-      .map(
-        (h) => `
-      <div class="hist-item">
-        <div>
-          <div class="hist-name">${h.itemName}</div>
-          <div class="hist-meta">
-            ${h.date}
-            ${h.itemPrice ? ' · ¥' + Number(h.itemPrice).toLocaleString() : ''}
-            · ${h.score}点
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end">
-          ${
-            h.saved === true
-              ? `<span class="saved-badge">¥${Number(h.itemPrice).toLocaleString()} 節約</span>`
-              : h.saved === null && h.itemPrice > 0
-              ? `<button class="decision-btn-small bought" onclick="App.updateHistoryDecision('${h.id}',true)">🛒 買った</button>
-                 <button class="decision-btn-small skipped" onclick="App.updateHistoryDecision('${h.id}',false)">🌿 見送った</button>`
-              : ''
-          }
-          <span class="hist-badge ${h.type}">${h.verdict}</span>
-        </div>
-      </div>`
-      )
-      .join('');
+
+    history.forEach((h) => {
+      const item = document.createElement('div');
+      item.className = 'hist-item';
+
+      const info = document.createElement('div');
+      const name = document.createElement('div');
+      name.className = 'hist-name';
+      name.textContent = h.itemName;
+
+      const meta = document.createElement('div');
+      meta.className = 'hist-meta';
+      let metaText = h.date;
+      if (h.itemPrice) metaText += ` · ¥${Number(h.itemPrice).toLocaleString()}`;
+      metaText += ` · ${h.score}点`;
+      meta.textContent = metaText;
+
+      info.appendChild(name);
+      info.appendChild(meta);
+
+      const actions = document.createElement('div');
+      actions.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end';
+
+      if (h.saved === true) {
+        const badge = document.createElement('span');
+        badge.className = 'saved-badge';
+        badge.textContent = `¥${Number(h.itemPrice).toLocaleString()} 節約`;
+        actions.appendChild(badge);
+      } else if (h.saved === null && h.itemPrice > 0) {
+        const boughtBtn = document.createElement('button');
+        boughtBtn.className = 'decision-btn-small bought';
+        boughtBtn.textContent = '🛒 買った';
+        boughtBtn.dataset.historyId = h.id;
+        boughtBtn.dataset.isBought = 'true';
+
+        const skippedBtn = document.createElement('button');
+        skippedBtn.className = 'decision-btn-small skipped';
+        skippedBtn.textContent = '🌿 見送った';
+        skippedBtn.dataset.historyId = h.id;
+        skippedBtn.dataset.isBought = 'false';
+
+        actions.appendChild(boughtBtn);
+        actions.appendChild(skippedBtn);
+      }
+
+      const badge = document.createElement('span');
+      badge.className = `hist-badge ${h.type}`;
+      badge.textContent = h.verdict;
+      actions.appendChild(badge);
+
+      item.appendChild(info);
+      item.appendChild(actions);
+      el.appendChild(item);
+    });
+
+    // イベントデリゲーション：ボタンクリック時の処理
+    el.addEventListener('click', (e) => {
+      if (e.target.classList.contains('decision-btn-small')) {
+        const historyId = e.target.dataset.historyId;
+        const isBought = e.target.dataset.isBought === 'true';
+        App.updateHistoryDecision(historyId, isBought);
+      }
+    });
   },
 
   // 節約ダッシュボードを描画する（累計・月別内訳・節約アイテム一覧）
@@ -162,43 +225,71 @@ const UI = {
     const listEl = document.getElementById('savings-list');
     if (!listEl) return;
 
+    listEl.innerHTML = '';
+
     if (!savedItems.length) {
-      listEl.innerHTML = '<div class="empty-hist">まだ節約記録がありません</div>';
+      const emptyDiv = document.createElement('div');
+      emptyDiv.className = 'empty-hist';
+      emptyDiv.textContent = 'まだ節約記録がありません';
+      listEl.appendChild(emptyDiv);
       return;
     }
 
     // 月別内訳セクション
-    const monthlyHtml = monthly.length
-      ? `
-      <div class="savings-monthly">
-        <div class="savings-monthly-title">📅 月別内訳</div>
-        ${monthly
-          .map(
-            (m) => `
-          <div class="savings-monthly-row">
-            <span class="savings-monthly-label">${m.month.replace('-', '年')}月</span>
-            <span class="savings-monthly-amount">¥${Number(m.amount).toLocaleString()}</span>
-          </div>`
-          )
-          .join('')}
-      </div>`
-      : '';
+    if (monthly.length) {
+      const monthlyDiv = document.createElement('div');
+      monthlyDiv.className = 'savings-monthly';
+
+      const title = document.createElement('div');
+      title.className = 'savings-monthly-title';
+      title.textContent = '📅 月別内訳';
+      monthlyDiv.appendChild(title);
+
+      monthly.forEach((m) => {
+        const row = document.createElement('div');
+        row.className = 'savings-monthly-row';
+
+        const label = document.createElement('span');
+        label.className = 'savings-monthly-label';
+        label.textContent = m.month.replace('-', '年') + '月';
+
+        const amount = document.createElement('span');
+        amount.className = 'savings-monthly-amount';
+        amount.textContent = '¥' + Number(m.amount).toLocaleString();
+
+        row.appendChild(label);
+        row.appendChild(amount);
+        monthlyDiv.appendChild(row);
+      });
+
+      listEl.appendChild(monthlyDiv);
+    }
 
     // 節約アイテム一覧
-    const itemsHtml = savedItems
-      .map(
-        (h) => `
-      <div class="hist-item">
-        <div>
-          <div class="hist-name">${h.itemName}</div>
-          <div class="hist-meta">${h.date}</div>
-        </div>
-        <span class="saved-badge">¥${Number(h.itemPrice).toLocaleString()}</span>
-      </div>`
-      )
-      .join('');
+    savedItems.forEach((h) => {
+      const item = document.createElement('div');
+      item.className = 'hist-item';
 
-    listEl.innerHTML = monthlyHtml + itemsHtml;
+      const info = document.createElement('div');
+      const name = document.createElement('div');
+      name.className = 'hist-name';
+      name.textContent = h.itemName;
+
+      const meta = document.createElement('div');
+      meta.className = 'hist-meta';
+      meta.textContent = h.date;
+
+      info.appendChild(name);
+      info.appendChild(meta);
+
+      const badge = document.createElement('span');
+      badge.className = 'saved-badge';
+      badge.textContent = '¥' + Number(h.itemPrice).toLocaleString();
+
+      item.appendChild(info);
+      item.appendChild(badge);
+      listEl.appendChild(item);
+    });
   },
 
   // 背景に浮かぶ装飾絵文字（フローティー）を初期化する

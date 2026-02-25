@@ -3,10 +3,24 @@
 
 import { redis } from './lib/redis.js';
 import { getUser } from './lib/session.js';
+import { parseRecord } from './lib/utils.js';
 
-// Upstash は値を文字列で返す場合があるためパースして統一する
-function parseRecord(raw) {
-  return typeof raw === 'string' ? JSON.parse(raw) : raw;
+// ── ヘルパー関数 ─────────────────────────────────────────────────────────
+
+// 履歴から節約レコード（saved: true かつ価格あり）を月別に集計する
+function aggregateByMonth(history) {
+  const byMonth = {};
+  history
+    .filter((h) => h.saved && h.itemPrice > 0)
+    .forEach((h) => {
+      const d = h.createdAt ? new Date(h.createdAt) : new Date();
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      byMonth[key] = (byMonth[key] || 0) + Number(h.itemPrice);
+    });
+
+  return Object.entries(byMonth)
+    .sort(([a], [b]) => b.localeCompare(a))
+    .map(([month, amount]) => ({ month, amount }));
 }
 
 export default async function handler(req, res) {
@@ -30,24 +44,7 @@ export default async function handler(req, res) {
     ]);
 
     const history = (rawHistory || []).map(parseRecord);
-
-    // 節約レコード（saved: true かつ価格あり）を月別に集計する
-    const byMonth = {};
-    history
-      .filter((h) => h.saved && h.itemPrice > 0)
-      .forEach((h) => {
-        // createdAt があればそれを使い、なければ現在日時でフォールバック
-        const d = h.createdAt ? new Date(h.createdAt) : new Date();
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        byMonth[key] = (byMonth[key] || 0) + Number(h.itemPrice);
-      });
-
-    // 月別を新しい順にソートして配列化
-    const monthly = Object.entries(byMonth)
-      .sort(([a], [b]) => b.localeCompare(a))
-      .map(([month, amount]) => ({ month, amount }));
-
-    // 節約レコードを最新20件に絞る
+    const monthly = aggregateByMonth(history);
     const savedItems = history
       .filter((h) => h.saved && h.itemPrice > 0)
       .slice(0, 20);

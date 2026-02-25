@@ -67,22 +67,27 @@ const App = (() => {
 
   // 選択した回答を AI に送り、フィードバック文を取得する
   async function fetchFeedback(opt, questionIndex) {
-    const res = await fetch('/api/feedback', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        itemName:      state.itemName,
-        itemPrice:     state.itemPrice,
-        questionText:  QUESTIONS[questionIndex].text,
-        answerText:    opt.label,
-        answerScore:   opt.score,
-        questionIndex,
-        questionTheme: QUESTIONS[questionIndex].theme,
-      }),
-    });
-    if (!res.ok) throw new Error('feedback API error');
-    const data = await res.json();
-    return data.feedback;
+    try {
+      const res = await fetch('/api/feedback', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          itemName:      state.itemName,
+          itemPrice:     state.itemPrice,
+          questionText:  QUESTIONS[questionIndex].text,
+          answerText:    opt.label,
+          answerScore:   opt.score,
+          questionIndex,
+          questionTheme: QUESTIONS[questionIndex].theme,
+        }),
+      });
+      if (!res.ok) throw new Error('feedback API error');
+      const data = await res.json();
+      return data.feedback;
+    } catch (e) {
+      console.error('fetchFeedback:', e);
+      throw e;
+    }
   }
 
   // ── 質問フロー ────────────────────────────────────────────────────────────────
@@ -101,57 +106,69 @@ const App = (() => {
     renderQuestion();
   }
 
-  // 現在の質問を画面に描画する
-  function renderQuestion() {
-    const q          = QUESTIONS[state.currentQ];
-    const total      = QUESTIONS.length;
-    const isActivism = q.theme === 'shihonshugi';
-
-    // 消費文化テーマはダークカラーの特別カードで表示する
-    document.getElementById('q-card').className = isActivism ? 'card activism-card' : 'card';
-
-    const chip = document.getElementById('q-chip');
-    chip.className = isActivism ? 'q-item-chip activism' : 'q-item-chip';
-    document.getElementById('q-chip-name').textContent = state.itemName;
-
-    // プログレスバーとステップドット
-    document.getElementById('progress-fill').style.width =
-      (state.currentQ / total) * 100 + '%';
-    document.getElementById('q-number-label').textContent =
-      `質問 ${state.currentQ + 1} / ${total}`;
-    UI.renderStepDots(state.currentQ, total);
-
-    // テーマタグの色をテーマカラーに合わせる
-    const tag = document.getElementById('q-theme-tag');
+  // テーマタグのスタイルを設定する
+  function applyThemeTagStyle(tag, q) {
     tag.textContent = q.themeLabel;
-    if (isActivism) {
+    if (q.theme === 'shihonshugi') {
       tag.style.cssText = 'background:rgba(199,125,255,.2);border-color:#C77DFF;color:#C77DFF';
     } else {
       const c = q.themeColor;
-      tag.style.cssText = `background:${c}33;border-color:${c};color:${
-        c === 'var(--yellow)' ? '#b89300' : c
-      }`;
+      const textColor = c === 'var(--yellow)' ? '#b89300' : c;
+      tag.style.cssText = `background:${c}33;border-color:${c};color:${textColor}`;
     }
+  }
 
-    document.getElementById('q-text').textContent = q.text;
-    document.getElementById('q-sub').textContent  = q.sub;
-
-    // 選択肢ボタンを生成する
+  // 選択肢ボタンを生成してレンダリングする
+  function renderOptions(q) {
     const optsEl = document.getElementById('q-options');
     optsEl.innerHTML = '';
     q.options.forEach((opt) => {
       const btn = document.createElement('button');
       btn.className = 'opt-btn';
       btn.style.setProperty('--opt-color', opt.color);
-      btn.innerHTML = `
-        <span class="opt-icon">${opt.icon}</span>
-        <span class="opt-label">${opt.label}</span>
-        <span class="opt-sub">${opt.sub}</span>`;
+
+      const icon = document.createElement('span');
+      icon.className = 'opt-icon';
+      icon.textContent = opt.icon;
+
+      const label = document.createElement('span');
+      label.className = 'opt-label';
+      label.textContent = opt.label;
+
+      const sub = document.createElement('span');
+      sub.className = 'opt-sub';
+      sub.textContent = opt.sub;
+
+      btn.appendChild(icon);
+      btn.appendChild(label);
+      btn.appendChild(sub);
       btn.onclick = () => pickAnswer(opt, btn);
       optsEl.appendChild(btn);
     });
+  }
 
-    // フィードバックバブルと「次へ」ボタンをリセット
+  // 現在の質問を画面に描画する
+  function renderQuestion() {
+    const q          = QUESTIONS[state.currentQ];
+    const total      = QUESTIONS.length;
+    const isActivism = q.theme === 'shihonshugi';
+
+    document.getElementById('q-card').className = isActivism ? 'card activism-card' : 'card';
+
+    const chip = document.getElementById('q-chip');
+    chip.className = isActivism ? 'q-item-chip activism' : 'q-item-chip';
+    document.getElementById('q-chip-name').textContent = state.itemName;
+
+    document.getElementById('progress-fill').style.width = (state.currentQ / total) * 100 + '%';
+    document.getElementById('q-number-label').textContent = `質問 ${state.currentQ + 1} / ${total}`;
+    UI.renderStepDots(state.currentQ, total);
+
+    applyThemeTagStyle(document.getElementById('q-theme-tag'), q);
+    document.getElementById('q-text').textContent = q.text;
+    document.getElementById('q-sub').textContent  = q.sub;
+
+    renderOptions(q);
+
     document.getElementById('feedback-bubble').style.display = 'none';
     document.getElementById('btn-next').style.display        = 'none';
   }
@@ -205,68 +222,86 @@ const App = (() => {
 
   // ── 結果生成 ──────────────────────────────────────────────────────────────────
 
-  async function buildResult() {
-    // スコアを 0〜100 に正規化する（理論値: MAX=18, MIN=-17）
+  // スコアを 0〜100 に正規化する
+  function normalizeScore(scores) {
     const MAX = 18, MIN = -17;
-    const total    = state.scores.reduce((a, b) => a + b, 0);
-    const pct      = Math.max(0, Math.min(1, (total - MIN) / (MAX - MIN)));
-    const scorePct = Math.round(pct * 100);
+    const total = scores.reduce((a, b) => a + b, 0);
+    const pct = Math.max(0, Math.min(1, (total - MIN) / (MAX - MIN)));
+    return Math.round(pct * 100);
+  }
 
-    // スコアに応じて判定タイプを決定する
-    let type, emoji, verdict, desc;
+  // スコアに応じて判定タイプと詳細を決定する
+  function getResultVerdict(scorePct, itemName) {
+    const pct = scorePct / 100;
     if (pct >= 0.65) {
-      type    = 'buy';
-      emoji   = '🛒';
-      verdict = '買っちゃおう！';
-      desc    = `「${state.itemName}」は6つの視点からも本物の価値があると出ました。後悔しないでしょう！`;
-    } else if (pct >= 0.4) {
-      type    = 'wait';
-      emoji   = '⏳';
-      verdict = 'もう少し待って';
-      desc    = `「${state.itemName}」への気持ちはポジティブな面もありますが、引っかかる点もあります。1週間後に再考を。`;
-    } else {
-      type    = 'skip';
-      emoji   = '🌊';
-      verdict = '今回は見送ろう';
-      desc    = `「${state.itemName}」への欲求は一時的かもしれません。節約した分を本当に大切なものへ。`;
+      return {
+        type:    'buy',
+        emoji:   '🛒',
+        verdict: '買っちゃおう！',
+        desc:    `「${itemName}」は6つの視点からも本物の価値があると出ました。後悔しないでしょう！`,
+      };
     }
+    if (pct >= 0.4) {
+      return {
+        type:    'wait',
+        emoji:   '⏳',
+        verdict: 'もう少し待って',
+        desc:    `「${itemName}」への気持ちはポジティブな面もありますが、引っかかる点もあります。1週間後に再考を。`,
+      };
+    }
+    return {
+      type:    'skip',
+      emoji:   '🌊',
+      verdict: '今回は見送ろう',
+      desc:    `「${itemName}」への欲求は一時的かもしれません。節約した分を本当に大切なものへ。`,
+    };
+  }
 
-    // 結果を一意の ID で保存する（購入決定は後から PATCH で更新）
-    const recordId = crypto.randomUUID();
-    state.lastResult = { id: recordId, type, emoji, verdict, desc, scorePct };
-
-    saveResult({
-      id:        recordId,
-      itemName:  state.itemName,
-      itemPrice: parseFloat(state.itemPrice) || 0,
-      type, verdict, score: scorePct,
-      saved: null, // 未決定
-      date:  new Date().toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' }),
-    });
-
-    // 結果 UI を描画する
+  // 結果を UI に描画する
+  function renderResult(result) {
     const circle = document.getElementById('result-circle');
-    circle.className   = `result-circle ${type}`;
-    circle.textContent = emoji;
-    if (type === 'buy') UI.spawnConfetti();
+    circle.className   = `result-circle ${result.type}`;
+    circle.textContent = result.emoji;
+    if (result.type === 'buy') UI.spawnConfetti();
 
     document.getElementById('result-score').textContent =
-      `⭐ スコア ${scorePct}点 / 100点`;
+      `⭐ スコア ${result.scorePct}点 / 100点`;
 
     const vEl = document.getElementById('result-verdict');
-    vEl.className   = `result-verdict ${type}`;
-    vEl.textContent = verdict;
+    vEl.className   = `result-verdict ${result.type}`;
+    vEl.textContent = result.verdict;
 
-    document.getElementById('result-desc').textContent = desc;
-
+    document.getElementById('result-desc').textContent = result.desc;
     UI.renderTimeline(state.answers, state.feedbacks);
 
-    // 価格未入力の場合は「購入した / しなかった」の決定セクションを非表示にする
     const priceNum = parseFloat(state.itemPrice) || 0;
     document.getElementById('decision-section').style.display =
       priceNum > 0 ? 'block' : 'none';
 
     UI.showScreen('screen-result');
+  }
+
+  async function buildResult() {
+    const scorePct = normalizeScore(state.scores);
+    const verdict = getResultVerdict(scorePct, state.itemName);
+
+    // 結果を一意の ID で保存する（購入決定は後から PATCH で更新）
+    const recordId = crypto.randomUUID();
+    state.lastResult = { id: recordId, type: verdict.type, emoji: verdict.emoji, verdict: verdict.verdict, desc: verdict.desc, scorePct };
+
+    const priceNum = parseFloat(state.itemPrice) || 0;
+    saveResult({
+      id:        recordId,
+      itemName:  state.itemName,
+      itemPrice: priceNum,
+      type:      verdict.type,
+      verdict:   verdict.verdict,
+      score:     scorePct,
+      saved:     null,
+      date:      new Date().toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' }),
+    });
+
+    renderResult({ ...verdict, scorePct });
   }
 
   // ── 購入決定ヘルパー ─────────────────────────────────────────────────────────
@@ -306,12 +341,13 @@ const App = (() => {
 
     // 決定ボタンを隠し、見送りの場合は節約額ブロックを表示する
     document.getElementById('decision-section').style.display = 'none';
-    document.getElementById('savings-result-block').style.display =
-      bought ? 'none' : 'block';
-    document.getElementById('savings-result-amount').textContent =
-      '¥' + priceNum.toLocaleString();
-    document.getElementById('savings-total-inline').textContent =
-      '¥' + state.totalSaved.toLocaleString();
+    if (!bought) {
+      document.getElementById('savings-result-block').style.display = 'block';
+      document.getElementById('savings-result-amount').textContent = '¥' + priceNum.toLocaleString();
+      document.getElementById('savings-total-inline').textContent = '¥' + state.totalSaved.toLocaleString();
+    } else {
+      document.getElementById('savings-result-block').style.display = 'none';
+    }
   }
 
   // ── 節約画面 ─────────────────────────────────────────────────────────────────
